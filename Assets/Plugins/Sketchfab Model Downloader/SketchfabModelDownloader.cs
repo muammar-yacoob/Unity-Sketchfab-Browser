@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using UnityEngine.Serialization;
@@ -31,6 +32,7 @@ public class SketchfabModelDownloader : EditorWindow
     public Thumbnails thumbnails;
     private Texture2D windowIcon;
     private GUIStyle hyperlinkStyle;
+    [SerializeField] private Texture2D thumb;
 
     [MenuItem("Window/Tools/Sketchfab Model Downloader")]
     public static void ShowWindow()
@@ -45,8 +47,8 @@ public class SketchfabModelDownloader : EditorWindow
         titleContent.image = windowIcon;
 
     }
-    
-    void OnGUI()
+
+    private void OnGUI()
     {
         GUILayout.Label("Sketchfab Model Downloader", EditorStyles.boldLabel);
         if (hyperlinkStyle == null)
@@ -92,12 +94,33 @@ public class SketchfabModelDownloader : EditorWindow
             {
                 EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description}\nDownloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
                 
-                if (currentModelInfo.thumbnails.images.image != null)
+                if (thumb == null)
                 {
-                    GUILayout.Label(currentModelInfo.thumbnails.images.image);
+                    GetThumbnail().Forget();
+                }
+                else
+                {
+                    GUILayout.Label(thumb, GUILayout.Width(256));
+                }
+                
+                if (GUILayout.Button("Goto Model",hyperlinkStyle))
+                {
+                    Application.OpenURL(currentModelInfo.viewerUrl);
                 }
             }
         }
+    }
+
+    private async UniTaskVoid GetThumbnail()
+    {
+        // if (string.IsNullOrEmpty(currentModelInfo.thumbnails.images[0].url))
+        // {
+        //     thumb = null;
+        //     return;
+        // }
+
+        thumb = await DownloadImage(currentModelInfo.thumbnails.images[3].url);
+         Repaint();
     }
 
     async UniTaskVoid ConnectToSketchfab()
@@ -119,6 +142,7 @@ public class SketchfabModelDownloader : EditorWindow
                 connected = true;
                 AccountInfo accountInfo = JsonUtility.FromJson<AccountInfo>(request.downloadHandler.text);
                 accountName = accountInfo.username;
+                //avatar = accountInfo.avatar.images[1].url;
             }
             else
             {
@@ -143,18 +167,6 @@ public class SketchfabModelDownloader : EditorWindow
             if (request.result == UnityWebRequest.Result.Success)
             {
                 currentModelInfo = JsonUtility.FromJson<ModelInfo>(request.downloadHandler.text);
-
-                if (!currentModelInfo.isDownloadable)
-                {
-                    Debug.LogError("Model is not downloadable");
-                }
-
-                if (!string.IsNullOrEmpty(currentModelInfo.thumbnails.images.url))
-                {
-                    Texture2D image = await DownloadImage(currentModelInfo.thumbnails.images.url);
-                    // now you have the image, you can assign it to a field or property in your class to display it later.
-                    currentModelInfo.thumbnails.images.image = image;
-                }
             }
             else
             {
@@ -240,12 +252,13 @@ public class SketchfabModelDownloader : EditorWindow
         public string uri; // URL of the model's page
         public Thumbnails thumbnails; // URLs and images of the model's thumbnails
         public bool isDownloadable;
+        public string viewerUrl;
     }
 
     [System.Serializable]
     public class Thumbnails
     {
-        public Thumbnail images;
+        public Thumbnail[] images;
 
         [System.Serializable]
         public class Thumbnail
