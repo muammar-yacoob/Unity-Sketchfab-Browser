@@ -2,9 +2,8 @@
   "name": "com.spark.sketchfabbrowser",
   "version": "0.0.1",
   "displayName": "Sketchfab Browser [beta]",
-  "description": "Fetches model data from Sketchfab.com",
+  "description": "Fetches model data from Sketchfab.",
   "unity": "2021.3",
   "dependencies": {
-    "com.cysharp.unitask": "2.3.1"
   }
 }
