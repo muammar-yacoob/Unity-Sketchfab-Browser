@@ -1,0 +1,10 @@
+{
+  "name": "com.spark.sketchfabbrowser",
+  "version": "0.9.1",
+  "displayName": "Sketchfab Browser",
+  "description": "Fetches model data from Sketchfab.com",
+  "unity": "2021.3",
+  "dependencies": {
+    "com.cysharp.unitask": "2.3.1"
+  }
+}

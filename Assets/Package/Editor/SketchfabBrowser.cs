@@ -21,7 +21,7 @@ public class ModelDownloadInfo
     }
 }
 
-public class SketchfabModelDownloader : EditorWindow
+public class SketchfabBrowser : EditorWindow
 {
     private string modelId = "564e02a97528499388ca00d3c6bdb044";
     private string apiToken = "your-sketchfab-api-token"; //https://sketchfab.com/settings/password
@@ -34,23 +34,22 @@ public class SketchfabModelDownloader : EditorWindow
     private GUIStyle hyperlinkStyle;
     [SerializeField] private Texture2D thumb;
 
-    [MenuItem("Window/Tools/Sketchfab Model Downloader")]
+    [MenuItem("Assets/S&ketchfab Browser")]
     public static void ShowWindow()
     {
-        SketchfabModelDownloader window = GetWindow<SketchfabModelDownloader>();
-        window.titleContent = new GUIContent("Sketchfab Model Downloader", window.windowIcon);
+        SketchfabBrowser window = GetWindow<SketchfabBrowser>();
+        window.titleContent = new GUIContent("Sketchfab Browser", window.windowIcon);
     }
 
     private void OnEnable()
     {
-        windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Plugins/Sketchfab Model Downloader/res/sketchfab-logo.png", typeof(Texture2D));
+        windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
         titleContent.image = windowIcon;
 
     }
 
     private void OnGUI()
     {
-        GUILayout.Label("Sketchfab Model Downloader", EditorStyles.boldLabel);
         if (hyperlinkStyle == null)
         {
             hyperlinkStyle = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } };
@@ -75,7 +74,7 @@ public class SketchfabModelDownloader : EditorWindow
         }
         else
         { 
-            EditorGUILayout.LabelField($"Connected as {accountName}",hyperlinkStyle);
+            GUILayout.Space(20);
             modelId = EditorGUILayout.TextField("Model ID", modelId);
 
             if (string.IsNullOrEmpty(modelId) || modelId.Length < 13)
@@ -108,6 +107,9 @@ public class SketchfabModelDownloader : EditorWindow
                     Application.OpenURL(currentModelInfo.viewerUrl);
                 }
             }
+            
+            GUILayout.Space(10);
+            GUILayout.Label($"Connected as {accountName}", EditorStyles.boldLabel);
         }
     }
 
