@@ -3,6 +3,7 @@ using UnityEditor;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
+using UnityEngine.Serialization;
 
 [System.Serializable]
 public class ModelDownloadInfo
@@ -89,7 +90,7 @@ public class SketchfabModelDownloader : EditorWindow
             
             if (currentModelInfo != null)
             {
-                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description}\nDownloadable: {(currentModelInfo.downloadable ? "Yes" : "No")}", MessageType.Info);
+                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description}\nDownloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
                 
                 if (currentModelInfo.thumbnails.images.image != null)
                 {
@@ -102,6 +103,7 @@ public class SketchfabModelDownloader : EditorWindow
     async UniTaskVoid ConnectToSketchfab()
     {
         await Connect(apiToken);
+        currentModelInfo = null;
     }
 
     async UniTask Connect(string token)
@@ -142,7 +144,7 @@ public class SketchfabModelDownloader : EditorWindow
             {
                 currentModelInfo = JsonUtility.FromJson<ModelInfo>(request.downloadHandler.text);
 
-                if (!currentModelInfo.downloadable)
+                if (!currentModelInfo.isDownloadable)
                 {
                     Debug.LogError("Model is not downloadable");
                 }
@@ -237,7 +239,7 @@ public class SketchfabModelDownloader : EditorWindow
         public string description;
         public string uri; // URL of the model's page
         public Thumbnails thumbnails; // URLs and images of the model's thumbnails
-        public bool downloadable;
+        public bool isDownloadable;
     }
 
     [System.Serializable]
