@@ -1,10 +1,13 @@
 {
-  "name": "com.sparkgames.sketchfabbrowser",
-  "version": "0.0.1",
-  "displayName": "Sketchfab Browser",
-  "description": "Fetches model data from Sketchfab.",
-  "unity": "2021.3",
-  "keywords": ["Sketchfab","Unity","Model","Spark"],
-  "author": "Spark Games",
-  "license": "ISC"
+	"name": "com.sparkgames.sketchfabbrowser",
+	"version": "0.0.1",
+	"displayName": "Sketchfab Browser [beta]",
+	"description": "Fetches model data from Sketchfab.",
+	"unity": "2021.3",
+	"keywords": ["Sketchfab","Unity","Model","Spark"],
+	"author": "Spark Games",
+	"license": "ISC",
+	"dependencies": {
+	"com.cysharp.unitask": "2.3.1"
+	}
 }
