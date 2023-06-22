@@ -50,6 +50,11 @@ public class SketchfabBrowser : EditorWindow
 
     private void OnGUI()
     {
+        if (Application.isPlaying)
+        {
+            GUILayout.Label($"Unavailable in play mode.", EditorStyles.boldLabel);
+            return;
+        }
         if (hyperlinkStyle == null)
         {
             hyperlinkStyle = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } };
