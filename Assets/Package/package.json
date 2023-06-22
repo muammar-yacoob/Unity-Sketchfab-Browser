@@ -1,7 +1,7 @@
 {
   "name": "com.spark.sketchfabbrowser",
-  "version": "0.9.1",
-  "displayName": "Sketchfab Browser",
+  "version": "0.0.1",
+  "displayName": "Sketchfab Browser [beta]",
   "description": "Fetches model data from Sketchfab.com",
   "unity": "2021.3",
   "dependencies": {
