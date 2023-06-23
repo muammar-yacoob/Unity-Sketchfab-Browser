@@ -1,7 +1,9 @@
+using System;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.Serialization;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using UnityEngine.Serialization;
@@ -18,6 +20,7 @@ public class SketchfabBrowser : EditorWindow
     private GUIStyle hyperlinkStyle;
     private Texture2D thumb;
     private string defaultSavePath = "Assets/SketchfabModels/";
+    private bool moreInfo;
 
     [MenuItem("Assets/Sketchfab Browser")]
     public static void ShowWindow()
@@ -80,7 +83,9 @@ public class SketchfabBrowser : EditorWindow
             
             if (currentModelInfo != null)
             {
-                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description}\nDownloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
+                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description}\n" +
+                                        $"Updated at: {currentModelInfo.updatedAt.ToString("Y")}\n"+
+                                        $"Downloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
 
                 //Load thumbnail only once
                 if (thumb == null) GetThumbnail().Forget();
@@ -89,14 +94,37 @@ public class SketchfabBrowser : EditorWindow
                 //Download model
                 if (currentModelInfo.isDownloadable)
                 {
+                    GUILayout.Label($"License: {currentModelInfo.license}", EditorStyles.boldLabel);
+                    GUILayout.Label($"Price: {currentModelInfo.price}", EditorStyles.boldLabel);
                     if (GUILayout.Button("Download Model")) DownloadModel().Forget();
                 }
                 
-                if (GUILayout.Button("Goto Model",hyperlinkStyle)) Application.OpenURL(currentModelInfo.viewerUrl);
+                GUILayout.Space(10);
+            }
+            
+            moreInfo = EditorGUILayout.BeginFoldoutHeaderGroup(moreInfo, "More info", EditorStyles.foldoutHeader);
+
+            if (moreInfo && currentModelInfo != null)
+            {
+                GUILayout.Label($"Mesh Data", EditorStyles.boldLabel);
+                EditorGUI.indentLevel += 50;
+                
+                GUILayout.Label($"Vertex Count: {currentModelInfo.vertexCount.ToString("N0")}");
+                GUILayout.Label($"Face Count: {currentModelInfo.faceCount.ToString("N0")}");
+                EditorGUI.indentLevel -= 50;
+                GUILayout.Label($"Materials: {currentModelInfo.materialCount}");
+                GUILayout.Label($"Textures: {currentModelInfo.textureCount}");
+                
+                if(currentModelInfo.animationCount > 0)
+                {
+                    GUILayout.Label($"Animations: {currentModelInfo.animationCount.ToString("N0")}");
+                }
             }
             
             GUILayout.Space(10);
+            if (GUILayout.Button("Goto Model", hyperlinkStyle)) Application.OpenURL(currentModelInfo.viewerUrl);
             GUILayout.Label($"Connected as {accountName}", EditorStyles.boldLabel);
+
         }
     }
 
@@ -132,6 +160,7 @@ public class SketchfabBrowser : EditorWindow
                 AccountInfo accountInfo = JsonUtility.FromJson<AccountInfo>(request.downloadHandler.text);
                 accountName = accountInfo.username;
                 //avatar = accountInfo.avatar.images[1].url;
+                FetchInfo().Forget();
             }
             else
             {
@@ -277,6 +306,16 @@ public class SketchfabBrowser : EditorWindow
         public Thumbnails thumbnails; // URLs and images of the model's thumbnails
         public bool isDownloadable;
         public string viewerUrl;
+        public int vertexCount;
+        public int textureCount;
+        public int materialCount;
+        public int faceCount;
+        public int animationCount;
+        
+        public string price;
+        public DateTime updatedAt;
+        public string license;
+
     }
 
     [System.Serializable]
