@@ -268,7 +268,7 @@ public class SketchfabBrowser : EditorWindow
         }
 
         File.Delete(savePath);
-        Debug.Log("Model downloaded and saved to: " + defaultSavePath);
+        Debug.Log($"Model is downloaded to: " + defaultSavePath);
     }
 
 
