@@ -1,25 +1,10 @@
 using UnityEngine;
 using UnityEditor;
 using System.IO;
-using System.Threading.Tasks;
+using System.IO.Compression;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using UnityEngine.Serialization;
-
-[System.Serializable]
-public class ModelDownloadInfo
-{
-    public ModelFormat gltf;
-    public ModelFormat usdz;
-
-    [System.Serializable]
-    public class ModelFormat
-    {
-        public string url;
-        public int size;
-        public int expires;
-    }
-}
 
 public class SketchfabBrowser : EditorWindow
 {
@@ -29,12 +14,12 @@ public class SketchfabBrowser : EditorWindow
     private string accountName;
     private ModelInfo currentModelInfo;
     public string uri; // URL of the model's page
-    public Thumbnails thumbnails;
     private Texture2D windowIcon;
     private GUIStyle hyperlinkStyle;
-    [SerializeField] private Texture2D thumb;
+    private Texture2D thumb;
+    private string defaultSavePath = "Assets/SketchfabModels/";
 
-    [MenuItem("Assets/S&ketchfab Browser")]
+    [MenuItem("Assets/Sketchfab Browser")]
     public static void ShowWindow()
     {
         SketchfabBrowser window = GetWindow<SketchfabBrowser>();
@@ -45,7 +30,6 @@ public class SketchfabBrowser : EditorWindow
     {
         windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
         titleContent.image = windowIcon;
-
     }
 
     private void OnGUI()
@@ -212,22 +196,33 @@ public class SketchfabBrowser : EditorWindow
         string downloadUrl = $"https://api.sketchfab.com/v3/models/{modelId}/download";
         using (var request = UnityWebRequest.Get(downloadUrl))
         {
-            request.SetRequestHeader("Authorization", $"Bearer {apiToken}");
+            request.SetRequestHeader("Authorization", $"Token {apiToken}");
             await request.SendWebRequest();
 
-            if (request.result == UnityWebRequest.Result.Success)
+            if (request.result == UnityWebRequest.Result.ConnectionError || request.result == UnityWebRequest.Result.ProtocolError)
             {
-                ModelDownloadInfo downloadInfo = JsonUtility.FromJson<ModelDownloadInfo>(request.downloadHandler.text);
-                await DownloadModelFromUrl(downloadInfo.gltf.url); // or downloadInfo.usdz.url for USDZ format
+                Debug.LogError("Error: " + request.error);
             }
-            else
+            else if (request.result == UnityWebRequest.Result.Success)
             {
-                Debug.LogError("Failed to fetch download URL: " + request.error);
+                if(request.responseCode == 401)
+                {
+                    Debug.LogError("Unauthorized: Invalid API token.");
+                }
+                else
+                {
+                    ModelDownloadInfo downloadInfo = JsonUtility.FromJson<ModelDownloadInfo>(request.downloadHandler.text);
+                    
+                    
+                    await DownloadModelFromUrl(downloadInfo.gltf.url, ModelFormatExtension.gltf);
+                    //await DownloadModelFromUrl(downloadInfo.source.url, ModelFormatExtension.fbx);
+                }
             }
         }
     }
 
-    async UniTask DownloadModelFromUrl(string url)
+
+    async UniTask DownloadModelFromUrl(string url, ModelFormatExtension ext)
     {
         using (var request = UnityWebRequest.Get(url))
         {
@@ -237,12 +232,14 @@ public class SketchfabBrowser : EditorWindow
             {
                 byte[] modelBytes = request.downloadHandler.data;
 
-                string savePath = EditorUtility.SaveFilePanel("Save Model", "", modelId, "");
-                if (!string.IsNullOrEmpty(savePath))
-                {
-                    File.WriteAllBytes(savePath, modelBytes);
-                    Debug.Log("Model downloaded and saved to: " + savePath);
-                }
+                string fileName = currentModelInfo.name + $".zip"; 
+                //string savePath = EditorUtility.SaveFilePanel("Save Model", "", modelId, "");
+                Directory.CreateDirectory(defaultSavePath);
+                string savePath = Path.Combine(defaultSavePath, fileName);
+
+                File.WriteAllBytes(savePath, modelBytes);
+
+                Unzip(savePath);
             }
             else
             {
@@ -250,6 +247,30 @@ public class SketchfabBrowser : EditorWindow
             }
         }
     }
+
+    private void Unzip(string savePath)
+    {
+        string unpackPath = $"{defaultSavePath}/{currentModelInfo.name}";
+        if (Directory.Exists(unpackPath))
+        {
+            Directory.Delete(unpackPath, true);
+        }
+
+        Directory.CreateDirectory(unpackPath);
+
+        try
+        {
+            ZipFile.ExtractToDirectory(savePath, unpackPath);
+        }
+        catch (IOException e)
+        {
+            Debug.LogError("Failed to unzip the model: " + e.Message);
+        }
+
+        File.Delete(savePath);
+        Debug.Log("Model downloaded and saved to: " + defaultSavePath);
+    }
+
 
     [System.Serializable]
     private class ModelInfo
@@ -271,7 +292,6 @@ public class SketchfabBrowser : EditorWindow
         public class Thumbnail
         {
             public string url;
-            public Texture2D image; // This won't be filled in by JsonUtility.FromJson
         }
     }
 
@@ -279,5 +299,26 @@ public class SketchfabBrowser : EditorWindow
     private class AccountInfo
     {
         public string username;
+    }
+    
+    [System.Serializable]
+    public class ModelDownloadInfo
+    {
+        public ModelFormat gltf;
+        [FormerlySerializedAs("fbx")] public ModelFormat source;
+
+        [System.Serializable]
+        public class ModelFormat
+        {
+            public string url;
+            public int size;
+            public int expires;
+        }
+    }
+
+    public enum ModelFormatExtension
+    {
+        gltf,
+        fbx
     }
 }
