@@ -83,11 +83,6 @@ public class SketchfabBrowser : EditorWindow
             
             if (currentModelInfo != null)
             {
-<<<<<<< Updated upstream
-                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description}\n" +
-                                        $"Updated at: {currentModelInfo.updatedAt.ToString("Y")}\n"+
-                                        $"Downloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
-=======
                 var dd = DateTime.ParseExact(currentModelInfo.updatedAt, "yyyy-MM-dd'T'HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
                 string updateShortDate = dd.ToString("dd-MMMM-yyyy");
                 
@@ -95,7 +90,6 @@ public class SketchfabBrowser : EditorWindow
                 EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {desc}\n"
                                         + $"Updated at: {updateShortDate}"
                                         , MessageType.Info);
->>>>>>> Stashed changes
 
                 //Load thumbnail only once
                 if (thumb == null) GetThumbnail().Forget();
