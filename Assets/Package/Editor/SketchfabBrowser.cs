@@ -71,9 +71,9 @@ public class SketchfabBrowser : EditorWindow
                 GUI.enabled = false;
             }
 
-            if (GUILayout.Button("Fetch Model"))
+            if (GUILayout.Button("Fetch Model Details"))
             {
-                FetchAndDownloadModel().Forget();
+                FetchInfo().Forget();
             }
 
             GUI.enabled = true;
@@ -81,20 +81,18 @@ public class SketchfabBrowser : EditorWindow
             if (currentModelInfo != null)
             {
                 EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description}\nDownloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
+
+                //Load thumbnail only once
+                if (thumb == null) GetThumbnail().Forget();
+                else GUILayout.Label(thumb, GUILayout.Width(256));
+
+                //Download model
+                if (currentModelInfo.isDownloadable)
+                {
+                    if (GUILayout.Button("Download Model")) DownloadModel().Forget();
+                }
                 
-                if (thumb == null)
-                {
-                    GetThumbnail().Forget();
-                }
-                else
-                {
-                    GUILayout.Label(thumb, GUILayout.Width(256));
-                }
-                
-                if (GUILayout.Button("Goto Model",hyperlinkStyle))
-                {
-                    Application.OpenURL(currentModelInfo.viewerUrl);
-                }
+                if (GUILayout.Button("Goto Model",hyperlinkStyle)) Application.OpenURL(currentModelInfo.viewerUrl);
             }
             
             GUILayout.Space(10);
@@ -142,11 +140,8 @@ public class SketchfabBrowser : EditorWindow
         }
     }
 
-    async UniTaskVoid FetchAndDownloadModel()
-    {
-        await FetchModelInfo();
-        await DownloadModel();
-    }
+    async UniTaskVoid FetchInfo() => await FetchModelInfo();
+    async UniTaskVoid Download() => await DownloadModel();
 
     async UniTask FetchModelInfo()
     {
@@ -157,6 +152,7 @@ public class SketchfabBrowser : EditorWindow
 
             if (request.result == UnityWebRequest.Result.Success)
             {
+                thumb = null;
                 currentModelInfo = JsonUtility.FromJson<ModelInfo>(request.downloadHandler.text);
             }
             else
