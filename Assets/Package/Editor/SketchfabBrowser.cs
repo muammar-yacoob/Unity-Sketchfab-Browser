@@ -1,12 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.IO.Compression;
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class SketchfabBrowser : EditorWindow
 {
@@ -14,13 +17,20 @@ public class SketchfabBrowser : EditorWindow
     private string apiToken = "your-sketchfab-api-token"; //https://sketchfab.com/settings/password
     private bool connected;
     private string accountName;
-    private ModelInfo currentModelInfo;
+    private Model _currentModel;
     public string uri; // URL of the model's page
     private Texture2D windowIcon;
     private GUIStyle hyperlinkStyle;
     private Texture2D thumb;
     private string defaultSavePath = "Assets/SketchfabModels/";
     private bool moreInfo;
+    private PageModels currentPageModels;
+    private string searchKeyword = "Milk";
+    
+    public Texture2D placeholderImage;
+    public GridLayoutGroup gridLayout;
+    public PageModels pageModels;
+    private List<SearchThumb> searchThumbs = new();
 
     [MenuItem("Assets/Sketchfab Browser")]
     public static void ShowWindow()
@@ -37,34 +47,78 @@ public class SketchfabBrowser : EditorWindow
 
     private void OnGUI()
     {
+        hyperlinkStyle ??= new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } };
         if (Application.isPlaying)
         {
             GUILayout.Label($"Unavailable in play mode.", EditorStyles.boldLabel);
             return;
         }
-        if (hyperlinkStyle == null)
-        {
-            hyperlinkStyle = new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } };
-        }
+        
         if (!connected)
         {
-            apiToken = EditorGUILayout.TextField("API Token", apiToken);
+            DrawConnectionUI();
+        }
+        else
+        {
+            GUILayout.Label($"Connected as {accountName}", EditorStyles.boldLabel);
             
-            if (GUILayout.Button("Get your API Token",hyperlinkStyle))
-            {
-                Application.OpenURL("https://sketchfab.com/settings/password");
-            }
-            if (string.IsNullOrEmpty(apiToken) || apiToken.Length != 32)
+            GUILayout.Space(20);
+            searchKeyword = EditorGUILayout.TextField("keyword", searchKeyword);
+
+            if (string.IsNullOrEmpty(searchKeyword))
             {
                 GUI.enabled = false;
             }
-            if (GUILayout.Button("Connect to Sketchfab"))
+
+            if (GUILayout.Button("Search"))
             {
-                ConnectToSketchfab().Forget();
+                Search24(searchKeyword).Forget();
+                Repaint();
             }
+
             GUI.enabled = true;
+            
+            if (pageModels == null || pageModels.results == null)
+            {
+                GUILayout.Label("No models available.");
+                return;
+            }
+
+            //display thumbs
+            if (searchThumbs == null || searchThumbs.Count == 0) return;
+            const int rowCount = 6;
+            const int columnCount = 2;
+            EditorGUILayout.Space();
+
+            int thumbIndex = 0;
+
+            for (int row = 0; row < rowCount; row++)
+            {
+                GUILayout.BeginHorizontal();
+
+                for (int col = 0; col < columnCount; col++)
+                {
+                    if (thumbIndex >= searchThumbs.Count)break;
+
+                    var m = pageModels.results[thumbIndex];
+                    var thumb = searchThumbs[thumbIndex];
+                    
+                    GUILayout.BeginVertical();
+                    GUILayout.Label(m.name, GUILayout.Width(266));
+                    GUILayout.Box(thumb.thumb, GUILayout.Width(266), GUILayout.Height(100));
+                    GUILayout.EndVertical();
+                    
+                    thumbIndex++;
+                }
+
+                GUILayout.EndHorizontal();
+            }
         }
-        else
+    }
+
+   
+    private void DrawModelDetails()
+    {
         { 
             GUILayout.Space(20);
             modelId = EditorGUILayout.TextField("Model ID", modelId);
@@ -77,17 +131,18 @@ public class SketchfabBrowser : EditorWindow
             if (GUILayout.Button("Fetch Model Details"))
             {
                 FetchInfo().Forget();
+                Repaint();
             }
 
             GUI.enabled = true;
             
-            if (currentModelInfo != null)
+            if (_currentModel != null)
             {
-                var dd = DateTime.ParseExact(currentModelInfo.updatedAt, "yyyy-MM-dd'T'HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+                var dd = DateTime.ParseExact(_currentModel.updatedAt, "yyyy-MM-dd'T'HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
                 string updateShortDate = dd.ToString("dd-MMMM-yyyy");
                 
-                string desc = currentModelInfo.description.Length > 20 ? currentModelInfo.description.Substring(0, 20): currentModelInfo.description;
-                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {desc}\n"
+                string desc = _currentModel.description.Length > 20 ? _currentModel.description.Substring(0, 20): _currentModel.description;
+                EditorGUILayout.HelpBox($"Model Name: {_currentModel.name}\nDescription: {desc}\n"
                                         + $"Updated at: {updateShortDate}"
                                         , MessageType.Info);
 
@@ -96,14 +151,14 @@ public class SketchfabBrowser : EditorWindow
                 else GUILayout.Label(thumb, GUILayout.Width(256));
 
                 //Download model
-                if (currentModelInfo.isDownloadable)
+                if (_currentModel.isDownloadable)
                 {
-                    GUILayout.Label($"License: {currentModelInfo.license.label}", EditorStyles.boldLabel);
+                    GUILayout.Label($"License: {_currentModel.license.label}", EditorStyles.boldLabel);
                     if (GUILayout.Button("Download Model")) DownloadModel().Forget();
                 }
                 else
                 {
-                    var price = (currentModelInfo.price/100).ToString("N2");
+                    var price = (_currentModel.price/100).ToString("N2");
                     GUILayout.Label($"Price: {price}", EditorStyles.boldLabel);
                     
                 }
@@ -113,46 +168,60 @@ public class SketchfabBrowser : EditorWindow
             
             moreInfo = EditorGUILayout.BeginFoldoutHeaderGroup(moreInfo, "More info", EditorStyles.foldoutHeader);
 
-            if (moreInfo && currentModelInfo != null)
+            if (moreInfo && _currentModel != null)
             {
                 GUILayout.Label($"Mesh Data", EditorStyles.boldLabel);
                 EditorGUI.indentLevel += 50;
                 
-                GUILayout.Label($"Vertex Count: {currentModelInfo.vertexCount.ToString("N0")}");
-                GUILayout.Label($"Face Count: {currentModelInfo.faceCount.ToString("N0")}");
+                GUILayout.Label($"Vertex Count: {_currentModel.vertexCount.ToString("N0")}");
+                GUILayout.Label($"Face Count: {_currentModel.faceCount.ToString("N0")}");
                 EditorGUI.indentLevel -= 50;
-                GUILayout.Label($"Materials: {currentModelInfo.materialCount}");
-                GUILayout.Label($"Textures: {currentModelInfo.textureCount}");
+                GUILayout.Label($"Materials: {_currentModel.materialCount}");
+                GUILayout.Label($"Textures: {_currentModel.textureCount}");
                 
-                if(currentModelInfo.animationCount > 0)
+                if(_currentModel.animationCount > 0)
                 {
-                    GUILayout.Label($"Animations: {currentModelInfo.animationCount.ToString("N0")}");
+                    GUILayout.Label($"Animations: {_currentModel.animationCount.ToString("N0")}");
                 }
             }
             
             GUILayout.Space(10);
-            if (GUILayout.Button("Goto Model", hyperlinkStyle)) Application.OpenURL(currentModelInfo.viewerUrl);
-            GUILayout.Label($"Connected as {accountName}", EditorStyles.boldLabel);
-
+            if (GUILayout.Button("Goto Model", hyperlinkStyle)) Application.OpenURL(_currentModel.viewerUrl);
         }
+    }
+
+    private void DrawConnectionUI()
+    {
+        apiToken = EditorGUILayout.TextField("API Token", apiToken);
+
+        if (GUILayout.Button("Get your API Token", hyperlinkStyle))
+        {
+            Application.OpenURL("https://sketchfab.com/settings/password");
+        }
+
+        if (string.IsNullOrEmpty(apiToken) || apiToken.Length != 32)
+        {
+            GUI.enabled = false;
+        }
+
+        if (GUILayout.Button("Connect to Sketchfab"))
+        {
+            ConnectToSketchfab().Forget();
+        }
+
+        GUI.enabled = true;
     }
 
     private async UniTaskVoid GetThumbnail()
     {
-        // if (string.IsNullOrEmpty(currentModelInfo.thumbnails.images[0].url))
-        // {
-        //     thumb = null;
-        //     return;
-        // }
-
-        thumb = await DownloadImage(currentModelInfo.thumbnails.images[3].url);
+        thumb = await DownloadImage(_currentModel.thumbnails.images[3].url);
          Repaint();
     }
 
     async UniTaskVoid ConnectToSketchfab()
     {
         await Connect(apiToken);
-        currentModelInfo = null;
+        _currentModel = null;
     }
 
     async UniTask Connect(string token)
@@ -168,8 +237,6 @@ public class SketchfabBrowser : EditorWindow
                 connected = true;
                 AccountInfo accountInfo = JsonUtility.FromJson<AccountInfo>(request.downloadHandler.text);
                 accountName = accountInfo.username;
-                //avatar = accountInfo.avatar.images[1].url;
-                FetchInfo().Forget();
             }
             else
             {
@@ -181,6 +248,45 @@ public class SketchfabBrowser : EditorWindow
     async UniTaskVoid FetchInfo() => await FetchModelInfo();
     async UniTaskVoid Download() => await DownloadModel();
 
+    async UniTask Search24(string keyword, string after= null)
+    {
+        string modelInfoUrl = $"https://api.sketchfab.com/v3/search?type=models&downloadable=true&purchasable=true&tags={keyword}&name={keyword}&description={keyword}&sort_by=-likeCount&per_page=24&after={after}";
+        using (var request = UnityWebRequest.Get(modelInfoUrl))
+        {
+            request.SetRequestHeader("Authorization", $"Token {apiToken}");
+            await request.SendWebRequest();
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("Error: " + request.error);
+                return;
+            }
+
+            pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
+            await LoadSearchThumbs();
+        }
+    }
+
+    private async Task LoadSearchThumbs()
+    {
+        if (pageModels.results.Length > 0)
+        {
+            searchThumbs.Clear();
+            foreach (var model in pageModels.results)
+            {
+                if (model.thumbnails.images.Length > 0)
+                {
+                    var thumb = await DownloadImage(model.thumbnails.images[3].url);
+                    if (thumb != null)
+                    {
+                        searchThumbs.Add(new SearchThumb(model.uid, thumb));
+                    }
+                }
+            }
+        }
+    }
+
+
     async UniTask FetchModelInfo()
     {
         string modelInfoUrl = $"https://api.sketchfab.com/v3/models/{modelId}";
@@ -191,7 +297,7 @@ public class SketchfabBrowser : EditorWindow
             if (request.result == UnityWebRequest.Result.Success)
             {
                 thumb = null;
-                currentModelInfo = JsonUtility.FromJson<ModelInfo>(request.downloadHandler.text);
+                _currentModel = JsonUtility.FromJson<Model>(request.downloadHandler.text);
             }
             else
             {
@@ -266,7 +372,7 @@ public class SketchfabBrowser : EditorWindow
             {
                 byte[] modelBytes = request.downloadHandler.data;
 
-                string fileName = currentModelInfo.name + $".zip"; 
+                string fileName = _currentModel.name + $".zip"; 
                 //string savePath = EditorUtility.SaveFilePanel("Save Model", "", modelId, "");
                 Directory.CreateDirectory(defaultSavePath);
                 string savePath = Path.Combine(defaultSavePath, fileName);
@@ -284,7 +390,7 @@ public class SketchfabBrowser : EditorWindow
 
     private void Unzip(string savePath)
     {
-        string unpackPath = $"{defaultSavePath}/{currentModelInfo.name}";
+        string unpackPath = $"{defaultSavePath}/{_currentModel.name}";
         if (Directory.Exists(unpackPath))
         {
             Directory.Delete(unpackPath, true);
@@ -305,9 +411,21 @@ public class SketchfabBrowser : EditorWindow
         Debug.Log($"Model is downloaded to: " + defaultSavePath);
     }
 
+    [System.Serializable]
+    public class PageModels
+    {
+        public Model[] results;
+        public Pagination pagination;
+    }
+    
+    [System.Serializable]
+    public class Pagination
+    {
+        public string next;
+    }
 
     [System.Serializable]
-    private class ModelInfo
+    public class Model
     {
         public string name;
         public string description;
@@ -324,7 +442,7 @@ public class SketchfabBrowser : EditorWindow
         public float price;
         public string updatedAt;
         public License license;
-
+        public string uid;
     }
 
     [System.Serializable]
@@ -372,3 +490,16 @@ public class SketchfabBrowser : EditorWindow
         fbx
     }
 }
+
+internal class SearchThumb
+{
+    public readonly string uid;
+    public readonly Texture2D thumb;
+
+    public SearchThumb(string modelUid, Texture2D texture2D)
+    {
+        uid = modelUid;
+        thumb = texture2D;
+    }
+}
+
