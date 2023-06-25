@@ -73,7 +73,6 @@ public class SketchfabBrowser : EditorWindow
             if (GUILayout.Button("Search"))
             {
                 Search24(searchKeyword).Forget();
-                Repaint();
             }
 
             GUI.enabled = true;
