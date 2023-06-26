@@ -83,7 +83,9 @@ public class SketchfabBrowser : EditorWindow
             
             if (currentModelInfo != null)
             {
-                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {currentModelInfo.description.Substring(0,80)}\n" +
+                string desc = currentModelInfo.description.Length < 80 ? currentModelInfo.description : currentModelInfo.description.Substring(0, 80);
+
+                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {desc}\n" +
                                         $"Updated at: {currentModelInfo.updatedAt.ToString("Y")}\n"+
                                         $"Downloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
 
