@@ -1,9 +1,9 @@
 using System;
+using System.Globalization;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.Serialization;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using UnityEngine.Serialization;
@@ -83,12 +83,14 @@ public class SketchfabBrowser : EditorWindow
             
             if (currentModelInfo != null)
             {
-                string desc = currentModelInfo.description.Length < 80 ? currentModelInfo.description : currentModelInfo.description.Substring(0, 80);
 
-                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {desc}\n" +
-                                        $"Updated at: {currentModelInfo.updatedAt.ToString("Y")}\n"+
-                                        $"Downloadable: {(currentModelInfo.isDownloadable ? "Yes" : "No")}", MessageType.Info);
-
+                var dd = DateTime.ParseExact(currentModelInfo.updatedAt, "yyyy-MM-dd'T'HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+                string updateShortDate = dd.ToString("dd-MMMM-yyyy");
+                
+                string desc = currentModelInfo.description.Length > 20 ? currentModelInfo.description.Substring(0, 20): currentModelInfo.description;
+                EditorGUILayout.HelpBox($"Model Name: {currentModelInfo.name}\nDescription: {desc}\n"
+                                        + $"Updated at: {updateShortDate}"
+                                        , MessageType.Info);
                 //Load thumbnail only once
                 if (thumb == null) GetThumbnail().Forget();
                 else GUILayout.Label(thumb, GUILayout.Width(256));
@@ -96,9 +98,14 @@ public class SketchfabBrowser : EditorWindow
                 //Download model
                 if (currentModelInfo.isDownloadable)
                 {
-                    GUILayout.Label($"License: {currentModelInfo.license}", EditorStyles.boldLabel);
-                    GUILayout.Label($"Price: {currentModelInfo.price}", EditorStyles.boldLabel);
+                    GUILayout.Label($"License: {currentModelInfo.license.label}", EditorStyles.boldLabel);
                     if (GUILayout.Button("Download Model")) DownloadModel().Forget();
+                }
+                else
+                {
+                    var price = (currentModelInfo.price/100).ToString("N2");
+                    GUILayout.Label($"Price: {price}", EditorStyles.boldLabel);
+                    
                 }
                 
                 GUILayout.Space(10);
@@ -314,9 +321,9 @@ public class SketchfabBrowser : EditorWindow
         public int faceCount;
         public int animationCount;
         
-        public string price;
-        public DateTime updatedAt;
-        public string license;
+        public float price;
+        public string updatedAt;
+        public License license;
 
     }
 
@@ -330,6 +337,12 @@ public class SketchfabBrowser : EditorWindow
         {
             public string url;
         }
+    }
+
+    [System.Serializable]
+    public class License
+    {
+        public string label;
     }
 
     [System.Serializable]
