@@ -1,62 +1,37 @@
 using UnityEditor;
 using UnityEngine;
 
-public class GridWindow : EditorWindow
-{
-    private Vector2 scrollPosition;
-    private GridPanel panelDrawer;
-
-    [MenuItem("Window/Scrollable Grid")]
-    public static void ShowWindow()
-    {
-        GetWindow<GridWindow>("Scrollable Grid");
-    }
-
-    private void OnEnable()
-    {
-        panelDrawer = new GridPanel();
-    }
-
-    private void OnGUI()
-    {
-        int rowCount = 20;
-        int columnCount = 3;
-        float panelWidth = (position.width -60) / columnCount;
-        float panelHeight = 60f;
-        float padding = 10f;
-
-        GUILayout.Space(padding);
-        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-
-        for (int row = 0; row < rowCount; row++)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(padding);
-            for (int col = 0; col < columnCount; col++)
-            {
-                Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
-                panelDrawer.Draw(panelRect, row, col);
-                GUILayout.Space(padding);
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.Space(padding);
-        }
-
-        EditorGUILayout.EndScrollView();
-    }
-}
-
 public class GridPanel
 {
-    public void Draw(Rect rect, int row, int col)
-    {
-        EditorGUI.DrawRect(rect, Color.blue);
+    private bool showDetails;
 
-        GUIContent labelContent = new GUIContent($"Panel {row}-{col}");
+    public void Draw(Rect rect, int row, int col, Texture2D image, SketchfabBrowser.Model modelInfo)
+    {
+        if (showDetails) rect.height += 60f;
+        
         GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
         labelStyle.normal.textColor = Color.white;
-        labelStyle.alignment = TextAnchor.MiddleCenter;
+        labelStyle.alignment = TextAnchor.LowerCenter;
+        
+        // Background
+        //EditorGUI.DrawRect(rect, Color.gray);
 
-        EditorGUI.LabelField(rect, labelContent, labelStyle);
+        // Thumbnail
+        Rect imageRect = new Rect(rect.x, rect.y, rect.width,  80);
+        
+        if (GUI.Button(imageRect, GUIContent.none, GUIStyle.none)) showDetails = !showDetails;
+        GUI.DrawTexture(imageRect, image, ScaleMode.ScaleToFit);
+
+        // Button
+        Rect buttonRect = new Rect(rect.x, rect.y + rect.height - 20f, rect.width, 20f);
+        if (GUI.Button(buttonRect, "Download"))
+        {
+            // Button click logic here
+        }
+        
+        // Description
+        if (!showDetails) return;
+        Rect labelRect = new Rect(rect.x, rect.y + rect.height - 40f, rect.width, 20f);
+        GUI.Label(labelRect, modelInfo.name, labelStyle);
     }
 }

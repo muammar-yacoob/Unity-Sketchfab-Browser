@@ -103,8 +103,8 @@ public class SketchfabBrowser : EditorWindow
         
         int rowCount = 6;
         int columnCount = 2;
-        float panelWidth = (position.width -60) / columnCount;
-        float panelHeight = 60f;
+        float panelWidth = (position.width -100) / columnCount;
+        float panelHeight = 100f;
         float padding = 10f;
 
         GUILayout.Space(padding);
@@ -118,21 +118,16 @@ public class SketchfabBrowser : EditorWindow
             for (int col = 0; col < columnCount; col++)
             {
                 if (thumbIndex >= searchThumbs.Count) break;
-                Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
-                //panelDrawer.Draw(panelRect, row, col); //TODO: take model drawing logic here
 
                 var m = pageModels.results[thumbIndex];
-                var thumb = searchThumbs[thumbIndex];
-
-                GUILayout.BeginVertical();
-                GUILayout.Label(m.name, GUILayout.Width(266));
-                GUILayout.Box(thumb.thumb, GUILayout.Width(266), GUILayout.Height(100));
-                GUILayout.EndVertical();
-                GUILayout.Space(padding);
+                var thumbs = searchThumbs[thumbIndex];
+                
+                Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
+                panelDrawer.Draw(panelRect, row, col,thumbs.thumb, m); //TODO: take model drawing logic here
                 thumbIndex++;
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(padding);
+            GUILayout.Space(padding+60);
         }
 
         EditorGUILayout.EndScrollView();
