@@ -99,37 +99,8 @@ public class SketchfabBrowser : EditorWindow
 
     private void DisplayResults()
     {
-        //if (searchThumbs == null || searchThumbs.Count == 0) return;
-        
-        int rowCount = 6;
-        int columnCount = 2;
-        float panelWidth = (position.width -100) / columnCount;
-        float panelHeight = 100f;
-        float padding = 10f;
-
-        GUILayout.Space(padding);
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-
-        int thumbIndex=0;
-        for (int row = 0; row < rowCount; row++)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(padding);
-            for (int col = 0; col < columnCount; col++)
-            {
-                if (thumbIndex >= searchThumbs.Count) break;
-
-                var m = pageModels.results[thumbIndex];
-                var thumbs = searchThumbs[thumbIndex];
-                
-                Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
-                panelDrawer.Draw(panelRect, row, col,thumbs.thumb, m); //TODO: take model drawing logic here
-                thumbIndex++;
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.Space(padding+60);
-        }
-
+        panelDrawer.Draw(position.width, pageModels.results, searchThumbs);
         EditorGUILayout.EndScrollView();
     }
 
@@ -544,7 +515,7 @@ public class SketchfabBrowser : EditorWindow
     }
 }
 
-internal class SearchThumb
+public class SearchThumb
 {
     public readonly string uid;
     public readonly Texture2D thumb;
