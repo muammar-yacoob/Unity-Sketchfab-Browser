@@ -83,7 +83,6 @@ public class SketchfabBrowser : EditorWindow
 
             if (GUI.GetNameOfFocusedControl() == searchKewordInput && Event.current.keyCode == KeyCode.Return)
             {
-                GUI.FocusControl(null);
                 Search24(searchKeyword).Forget();
             }
             #endregion
@@ -118,7 +117,7 @@ public class SketchfabBrowser : EditorWindow
             GUILayout.Space(padding);
             for (int col = 0; col < columnCount; col++)
             {
-                if (thumbIndex > searchThumbs.Count) break;
+                if (thumbIndex >= searchThumbs.Count) break;
                 Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
                 //panelDrawer.Draw(panelRect, row, col); //TODO: take model drawing logic here
 
@@ -289,6 +288,7 @@ public class SketchfabBrowser : EditorWindow
     async UniTask Search24(string keyword, string after= null)
     {
         isSearching = true;
+        GUI.FocusControl(null);
 
         string searchRequest = $"https://api.sketchfab.com/v3/search?type=models&downloadable=true&purchasable=true&tags={keyword}&name={keyword}&description={keyword}&sort_by=-likeCount&per_page=24&after={after}";
         using (var request = UnityWebRequest.Get(searchRequest))
@@ -305,6 +305,7 @@ public class SketchfabBrowser : EditorWindow
 
             pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
             Debug.LogWarning($"Search Finished with {pageModels.results.Length} results!");
+            isSearching = false;
             await LoadSearchThumbs();
         }
 
@@ -325,6 +326,10 @@ public class SketchfabBrowser : EditorWindow
                     if (thumb != null)
                     {
                         searchThumbs.Add(new SearchThumb(model.uid, thumb));
+                    }
+                    else
+                    {
+                        Debug.LogError("Failed to download thumbnail for model: " + model.uid);
                     }
                 }
             }
@@ -373,7 +378,7 @@ public class SketchfabBrowser : EditorWindow
         else
         {
             Debug.LogError("Thumbnail URL is empty or null.");
-            return null;
+            return default;
         }
     }
 
