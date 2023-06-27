@@ -31,7 +31,11 @@ public class SketchfabBrowser : EditorWindow
     public GridLayoutGroup gridLayout;
     public PageModels pageModels;
     private List<SearchThumb> searchThumbs = new();
+    private bool isSearching;
     private const string SketchfabTokenKey = "SketchfabTokenKey";
+    
+    private Vector2 scrollPosition;
+    private GridPanel panelDrawer;
 
 
     [MenuItem("Assets/Sketchfab Browser")]
@@ -47,11 +51,11 @@ public class SketchfabBrowser : EditorWindow
         windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
         titleContent.image = windowIcon;
         apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
+        panelDrawer = new GridPanel();
     }
 
     private void OnGUI()
     {
-        hyperlinkStyle ??= new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } };
         if (Application.isPlaying)
         {
             GUILayout.Label($"Unavailable in play mode.", EditorStyles.boldLabel);
@@ -66,20 +70,18 @@ public class SketchfabBrowser : EditorWindow
         {
             GUILayout.Label($"Connected as {accountName}", EditorStyles.boldLabel);
             
+            #region ٍSearch Button
             GUILayout.Space(20);
             searchKeyword = EditorGUILayout.TextField("keyword", searchKeyword);
-
-            if (string.IsNullOrEmpty(searchKeyword))
-            {
-                GUI.enabled = false;
-            }
-
+            GUI.enabled = !isSearching || string.IsNullOrEmpty(searchKeyword);
             if (GUILayout.Button("Search"))
             {
+                isSearching = true;
                 Search24(searchKeyword).Forget();
             }
-
             GUI.enabled = true;
+
+            #endregion
             
             if (pageModels == null || pageModels.results == null)
             {
@@ -87,39 +89,72 @@ public class SketchfabBrowser : EditorWindow
                 return;
             }
 
-            //display thumbs
-            if (searchThumbs == null || searchThumbs.Count == 0) return;
-            const int rowCount = 6;
-            const int columnCount = 2;
-            EditorGUILayout.Space();
-
-            int thumbIndex = 0;
-
-            for (int row = 0; row < rowCount; row++)
-            {
-                GUILayout.BeginHorizontal();
-
-                for (int col = 0; col < columnCount; col++)
-                {
-                    if (thumbIndex >= searchThumbs.Count)break;
-
-                    var m = pageModels.results[thumbIndex];
-                    var thumb = searchThumbs[thumbIndex];
-                    
-                    GUILayout.BeginVertical();
-                    GUILayout.Label(m.name, GUILayout.Width(266));
-                    GUILayout.Box(thumb.thumb, GUILayout.Width(266), GUILayout.Height(100));
-                    GUILayout.EndVertical();
-                    
-                    thumbIndex++;
-                }
-
-                GUILayout.EndHorizontal();
-            }
+            DisplayResults();
         }
     }
 
-   
+    private void DisplayResults()
+    {
+        int rowCount = 20;
+        int columnCount = 3;
+        float panelWidth = (position.width -60) / columnCount;
+        float panelHeight = 60f;
+        float padding = 10f;
+
+        GUILayout.Space(padding);
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
+        for (int row = 0; row < rowCount; row++)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(padding);
+            for (int col = 0; col < columnCount; col++)
+            {
+                Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
+                panelDrawer.Draw(panelRect, row, col);
+                GUILayout.Space(padding);
+            }
+            GUILayout.EndHorizontal();
+            GUILayout.Space(padding);
+        }
+
+        EditorGUILayout.EndScrollView();
+    }
+
+    private void Resultswiththumbs()
+    {
+        //display thumbs
+        if (searchThumbs == null || searchThumbs.Count == 0) return;
+        const int rowCount = 6;
+        const int columnCount = 2;
+        EditorGUILayout.Space();
+
+        int thumbIndex = 0;
+
+        for (int row = 0; row < rowCount; row++)
+        {
+            GUILayout.BeginHorizontal();
+
+            for (int col = 0; col < columnCount; col++)
+            {
+                if (thumbIndex >= searchThumbs.Count) break;
+
+                var m = pageModels.results[thumbIndex];
+                var thumb = searchThumbs[thumbIndex];
+
+                GUILayout.BeginVertical();
+                GUILayout.Label(m.name, GUILayout.Width(266));
+                GUILayout.Box(thumb.thumb, GUILayout.Width(266), GUILayout.Height(100));
+                GUILayout.EndVertical();
+
+                thumbIndex++;
+            }
+
+            GUILayout.EndHorizontal();
+        }
+    }
+
+
     private void DrawModelDetails()
     {
         { 
@@ -195,6 +230,8 @@ public class SketchfabBrowser : EditorWindow
 
     private void DrawConnectionUI()
     {
+        hyperlinkStyle ??= new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } };
+
         string tokenFieldName = "apiTokenField";
         GUI.SetNextControlName(tokenFieldName);
         apiToken = EditorGUILayout.TextField("API Token", apiToken);
@@ -283,6 +320,9 @@ public class SketchfabBrowser : EditorWindow
             pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
             await LoadSearchThumbs();
         }
+
+        isSearching = false;
+        Repaint();
     }
 
     private async Task LoadSearchThumbs()

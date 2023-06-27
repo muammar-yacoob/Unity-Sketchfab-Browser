@@ -1,8 +1,9 @@
 {
     "name": "SparkGames.Sketchfab.Editor",
-    "rootNamespace": "",
+    "rootNamespace": "SparkGames.Sketchfab",
     "references": [
-        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:dfdc04dd4a53c5d4ba1e6ad417d35948"
     ],
     "includePlatforms": [
         "Editor"
