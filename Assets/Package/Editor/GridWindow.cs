@@ -82,7 +82,7 @@ public class GridPanel
                     string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
                     if (GUI.Button(buttonRect, buttonText))
                     {
-                        Debug.Log("Download");
+                        SketchfabBrowser.Instance.DownloadModel(m.uid, m.name);
                     }
                 }
 
