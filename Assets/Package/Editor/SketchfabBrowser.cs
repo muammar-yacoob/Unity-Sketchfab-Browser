@@ -19,17 +19,14 @@ public class SketchfabBrowser : EditorWindow
     private bool connected;
     private string accountName;
     private Model _currentModel;
-    public string uri; // URL of the model's page
     private Texture2D windowIcon;
     private GUIStyle hyperlinkStyle;
     private Texture2D thumb;
     private string defaultSavePath = "Assets/SketchfabModels/";
     private bool moreInfo;
     private PageModels currentPageModels;
-    private string searchKeyword = "Milk";
+    private string searchKeyword = "milk";
     
-    public Texture2D placeholderImage;
-    public GridLayoutGroup gridLayout;
     public PageModels pageModels;
     private List<SearchThumb> searchThumbs = new();
     private bool isSearching;
@@ -73,33 +70,40 @@ public class SketchfabBrowser : EditorWindow
             
             #region ٍSearch Button
             GUILayout.Space(20);
+
+            string searchKewordInput = "SearchKeywordInput";
+            GUI.SetNextControlName(searchKewordInput);
             searchKeyword = EditorGUILayout.TextField("keyword", searchKeyword);
             GUI.enabled = !isSearching || string.IsNullOrEmpty(searchKeyword);
             if (GUILayout.Button("Search"))
             {
-                isSearching = true;
                 Search24(searchKeyword).Forget();
             }
             GUI.enabled = true;
 
+            if (GUI.GetNameOfFocusedControl() == searchKewordInput && Event.current.keyCode == KeyCode.Return)
+            {
+                GUI.FocusControl(null);
+                Search24(searchKeyword).Forget();
+            }
             #endregion
             
-            if (pageModels == null || pageModels.results == null)
+            if (pageModels.results.Length > 0)
             {
-                GUILayout.Label("No models available.");
+                DisplayResults();
                 return;
             }
-
-            DisplayResults();
+            
+            GUILayout.Label("No models available.");
         }
     }
 
     private void DisplayResults()
     {
-        if (searchThumbs == null || searchThumbs.Count == 0) return;
+        //if (searchThumbs == null || searchThumbs.Count == 0) return;
         
-        int rowCount = 20;
-        int columnCount = 3;
+        int rowCount = 6;
+        int columnCount = 2;
         float panelWidth = (position.width -60) / columnCount;
         float panelHeight = 60f;
         float padding = 10f;
@@ -107,38 +111,16 @@ public class SketchfabBrowser : EditorWindow
         GUILayout.Space(padding);
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
+        int thumbIndex=0;
         for (int row = 0; row < rowCount; row++)
         {
             GUILayout.BeginHorizontal();
             GUILayout.Space(padding);
             for (int col = 0; col < columnCount; col++)
             {
+                if (thumbIndex > searchThumbs.Count) break;
                 Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
-                panelDrawer.Draw(panelRect, row, col);
-                GUILayout.Space(padding);
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.Space(padding);
-        }
-
-        EditorGUILayout.EndScrollView();
-    }
-
-    private void Resultswiththumbs()
-    {
-        const int rowCount = 6;
-        const int columnCount = 2;
-        EditorGUILayout.Space();
-
-        int thumbIndex = 0;
-
-        for (int row = 0; row < rowCount; row++)
-        {
-            GUILayout.BeginHorizontal();
-
-            for (int col = 0; col < columnCount; col++)
-            {
-                if (thumbIndex >= searchThumbs.Count) break;
+                //panelDrawer.Draw(panelRect, row, col); //TODO: take model drawing logic here
 
                 var m = pageModels.results[thumbIndex];
                 var thumb = searchThumbs[thumbIndex];
@@ -147,14 +129,15 @@ public class SketchfabBrowser : EditorWindow
                 GUILayout.Label(m.name, GUILayout.Width(266));
                 GUILayout.Box(thumb.thumb, GUILayout.Width(266), GUILayout.Height(100));
                 GUILayout.EndVertical();
-
+                GUILayout.Space(padding);
                 thumbIndex++;
             }
-
             GUILayout.EndHorizontal();
+            GUILayout.Space(padding);
         }
-    }
 
+        EditorGUILayout.EndScrollView();
+    }
 
     private void DrawModelDetails()
     {
@@ -178,7 +161,7 @@ public class SketchfabBrowser : EditorWindow
             if (_currentModel != null)
             {
 
-                var dd = DateTime.ParseExact(currentModelInfo.updatedAt, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+                var dd = DateTime.ParseExact(_currentModel.updatedAt, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
                 string updateShortDate = dd.ToString("dd-MMMM-yyyy");
                 
                 string desc = _currentModel.description.Length > 20 ? _currentModel.description.Substring(0, 20): _currentModel.description;
@@ -260,12 +243,11 @@ public class SketchfabBrowser : EditorWindow
             GUI.FocusControl(null);
             ConnectToSketchfab().Forget();
         }
-        
     }
 
     private async UniTaskVoid GetThumbnail()
     {
-        thumb = await DownloadImage(_currentModel.thumbnails.images[3].url);
+        thumb = await DownloadImage(_currentModel.thumbnails.images[0].url);
          Repaint();
     }
 
@@ -301,11 +283,13 @@ public class SketchfabBrowser : EditorWindow
     }
 
 
-    async UniTaskVoid FetchInfo() => await FetchModelInfo();
+    async UniTaskVoid FetchInfo() => await FetchModelInfo(modelId);
     async UniTaskVoid Download() => await DownloadModel();
 
     async UniTask Search24(string keyword, string after= null)
     {
+        isSearching = true;
+
         string searchRequest = $"https://api.sketchfab.com/v3/search?type=models&downloadable=true&purchasable=true&tags={keyword}&name={keyword}&description={keyword}&sort_by=-likeCount&per_page=24&after={after}";
         using (var request = UnityWebRequest.Get(searchRequest))
         {
@@ -315,10 +299,12 @@ public class SketchfabBrowser : EditorWindow
             if (request.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError("Error: " + request.error);
+                isSearching = false;
                 return;
             }
 
             pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
+            Debug.LogWarning($"Search Finished with {pageModels.results.Length} results!");
             await LoadSearchThumbs();
         }
 
@@ -333,7 +319,7 @@ public class SketchfabBrowser : EditorWindow
             searchThumbs.Clear();
             foreach (var model in pageModels.results)
             {
-                if (model.thumbnails.images.Length > 0)
+                if (model.thumbnails.images.Length > 2)
                 {
                     var thumb = await DownloadImage(model.thumbnails.images[3].url);
                     if (thumb != null)
@@ -343,10 +329,11 @@ public class SketchfabBrowser : EditorWindow
                 }
             }
         }
+        isSearching = false;
     }
 
 
-    async UniTask FetchModelInfo()
+    async UniTask FetchModelInfo(string modelId)
     {
         string modelInfoUrl = $"https://api.sketchfab.com/v3/models/{modelId}";
         using (var request = UnityWebRequest.Get(modelInfoUrl))
