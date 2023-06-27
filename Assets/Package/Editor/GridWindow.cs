@@ -10,8 +10,10 @@ public class GridPanel
     int rowCount = 6;
     int columnCount = 2;
 
-    float panelHeight = 100f;
+    float panelHeight = 150f;
     float padding = 2f;
+    private GUIStyle hyperlinkStyle;
+    private GUIStyle labelStyle;
 
     public void Draw(float w, SketchfabBrowser.Model[] models, List<SearchThumb> searchThumbs)
     {
@@ -31,15 +33,14 @@ public class GridPanel
 
                 Rect panelRect = GUILayoutUtility.GetRect(panelWidth, panelHeight);
 
-                GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
-                labelStyle.normal.textColor = Color.white;
-                labelStyle.alignment = TextAnchor.LowerCenter;
+                labelStyle ??= new GUIStyle(GUI.skin.label) { normal = { textColor = Color.white } , alignment = TextAnchor.LowerCenter};
+                hyperlinkStyle ??= new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } , alignment = TextAnchor.LowerCenter};
 
                 // Background
                 EditorGUI.DrawRect(panelRect, Color.blue);
 
                 // Thumbnail
-                Rect imageRect = new Rect(panelRect.x, panelRect.y, panelRect.width, 80);
+                Rect imageRect = new Rect(panelRect.x, panelRect.y, panelRect.width, panelHeight - 20f);
 
                 if (GUI.Button(imageRect, GUIContent.none, GUIStyle.none))
                 {
@@ -49,16 +50,40 @@ public class GridPanel
 
                 // Button
                 Rect buttonRect = new Rect(panelRect.x, panelRect.y + panelRect.height - 20f, panelRect.width, 20f);
-                if (GUI.Button(buttonRect, "Download"))
-                {
-                    Debug.Log("Download");
-                }
-
+                
                 // Description
                 if (showDetails)
                 {
-                    Rect labelRect = new Rect(panelRect.x, panelRect.y + panelRect.height - 40f, panelRect.width, 20f);
-                    GUI.Label(labelRect, models[thumbIndex].name, labelStyle);
+                    EditorGUI.DrawRect(panelRect, new Color(0,0,0,0.7f));
+                    Rect labelRect = new Rect(panelRect.x, panelRect.y, panelRect.width, 20f);
+                    GUI.Label(labelRect, m.name, labelStyle);
+                    labelRect.y += 20;
+                    GUI.Label(labelRect, m.license.label, labelStyle);
+                    labelRect.y += 20;
+                    GUI.Label(labelRect, "Vertices: "+m.vertexCount.ToString("N0"), labelStyle);                
+                    
+                    
+                    // labelRect.y += 20;
+                    // GUI.Label(labelRect, "Materials: "+m.materialCount, labelStyle);     
+                    //
+                    // labelRect.y += 20;
+                    // GUI.Label(labelRect, "Textures: "+m.textureCount, labelStyle);   
+                    
+                    if(m.animationCount > 0)
+                    {
+                        labelRect.y += 20;
+                        GUI.Label(labelRect, "Animations: " + m.animationCount, labelStyle);
+                    }
+                    
+                    if (GUI.Button(buttonRect, "More")) Application.OpenURL(m.viewerUrl);
+                }
+                else 
+                {
+                    string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
+                    if (GUI.Button(buttonRect, buttonText))
+                    {
+                        Debug.Log("Download");
+                    }
                 }
 
                 thumbIndex++;
