@@ -7,6 +7,7 @@ using System.IO.Compression;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using UnityEngine.Serialization;
+using Object = UnityEngine.Object;
 
 public class SketchfabBrowser : EditorWindow
 {
@@ -84,7 +85,7 @@ public class SketchfabBrowser : EditorWindow
             if (currentModelInfo != null)
             {
 
-                var dd = DateTime.ParseExact(currentModelInfo.updatedAt, "yyyy-MM-dd'T'HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+                var dd = DateTime.ParseExact(currentModelInfo.updatedAt, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
                 string updateShortDate = dd.ToString("dd-MMMM-yyyy");
                 
                 string desc = currentModelInfo.description.Length > 20 ? currentModelInfo.description.Substring(0, 20): currentModelInfo.description;
@@ -295,6 +296,13 @@ public class SketchfabBrowser : EditorWindow
         try
         {
             ZipFile.ExtractToDirectory(savePath, unpackPath);
+            
+            var targetObject = AssetDatabase.LoadAssetAtPath<Object>(savePath);
+            if (targetObject != null)
+            {
+                Selection.activeObject = targetObject;
+                EditorGUIUtility.PingObject(targetObject);
+            }
         }
         catch (IOException e)
         {
