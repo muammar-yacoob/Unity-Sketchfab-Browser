@@ -10,6 +10,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 public class SketchfabBrowser : EditorWindow
 {
@@ -176,14 +177,14 @@ public class SketchfabBrowser : EditorWindow
             
             if (_currentModel != null)
             {
-                var dd = DateTime.ParseExact(_currentModel.updatedAt, "yyyy-MM-dd'T'HH:mm:ss.ffffff", CultureInfo.InvariantCulture);
+
+                var dd = DateTime.ParseExact(currentModelInfo.updatedAt, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
                 string updateShortDate = dd.ToString("dd-MMMM-yyyy");
                 
                 string desc = _currentModel.description.Length > 20 ? _currentModel.description.Substring(0, 20): _currentModel.description;
                 EditorGUILayout.HelpBox($"Model Name: {_currentModel.name}\nDescription: {desc}\n"
                                         + $"Updated at: {updateShortDate}"
                                         , MessageType.Info);
-
                 //Load thumbnail only once
                 if (thumb == null) GetThumbnail().Forget();
                 else GUILayout.Label(thumb, GUILayout.Width(256));
@@ -459,6 +460,13 @@ public class SketchfabBrowser : EditorWindow
         try
         {
             ZipFile.ExtractToDirectory(savePath, unpackPath);
+            
+            var targetObject = AssetDatabase.LoadAssetAtPath<Object>(savePath);
+            if (targetObject != null)
+            {
+                Selection.activeObject = targetObject;
+                EditorGUIUtility.PingObject(targetObject);
+            }
         }
         catch (IOException e)
         {
