@@ -14,7 +14,7 @@ using UnityEngine.UI;
 public class SketchfabBrowser : EditorWindow
 {
     private string modelId = "564e02a97528499388ca00d3c6bdb044";
-    private string apiToken = "your-sketchfab-api-token"; //https://sketchfab.com/settings/password
+    private string apiToken; 
     private bool connected;
     private string accountName;
     private Model _currentModel;
@@ -31,18 +31,22 @@ public class SketchfabBrowser : EditorWindow
     public GridLayoutGroup gridLayout;
     public PageModels pageModels;
     private List<SearchThumb> searchThumbs = new();
+    private const string SketchfabTokenKey = "SketchfabTokenKey";
+
 
     [MenuItem("Assets/Sketchfab Browser")]
     public static void ShowWindow()
     {
         SketchfabBrowser window = GetWindow<SketchfabBrowser>();
         window.titleContent = new GUIContent("Sketchfab Browser", window.windowIcon);
+        
     }
 
     private void OnEnable()
     {
         windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
         titleContent.image = windowIcon;
+        apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
     }
 
     private void OnGUI()
@@ -191,6 +195,8 @@ public class SketchfabBrowser : EditorWindow
 
     private void DrawConnectionUI()
     {
+        string tokenFieldName = "apiTokenField";
+        GUI.SetNextControlName(tokenFieldName);
         apiToken = EditorGUILayout.TextField("API Token", apiToken);
 
         if (GUILayout.Button("Get your API Token", hyperlinkStyle))
@@ -205,10 +211,18 @@ public class SketchfabBrowser : EditorWindow
 
         if (GUILayout.Button("Connect to Sketchfab"))
         {
+            GUI.FocusControl(null);
             ConnectToSketchfab().Forget();
         }
 
         GUI.enabled = true;
+        
+        if (GUI.GetNameOfFocusedControl() == tokenFieldName && Event.current.keyCode == KeyCode.Return)
+        {
+            GUI.FocusControl(null);
+            ConnectToSketchfab().Forget();
+        }
+        
     }
 
     private async UniTaskVoid GetThumbnail()
@@ -236,6 +250,10 @@ public class SketchfabBrowser : EditorWindow
                 connected = true;
                 AccountInfo accountInfo = JsonUtility.FromJson<AccountInfo>(request.downloadHandler.text);
                 accountName = accountInfo.username;
+                Repaint();
+                
+                PlayerPrefs.SetString(SketchfabTokenKey, token);
+                PlayerPrefs.Save();
             }
             else
             {
@@ -243,6 +261,7 @@ public class SketchfabBrowser : EditorWindow
             }
         }
     }
+
 
     async UniTaskVoid FetchInfo() => await FetchModelInfo();
     async UniTaskVoid Download() => await DownloadModel();
