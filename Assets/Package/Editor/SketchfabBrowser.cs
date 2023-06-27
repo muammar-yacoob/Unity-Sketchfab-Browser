@@ -95,6 +95,8 @@ public class SketchfabBrowser : EditorWindow
 
     private void DisplayResults()
     {
+        if (searchThumbs == null || searchThumbs.Count == 0) return;
+        
         int rowCount = 20;
         int columnCount = 3;
         float panelWidth = (position.width -60) / columnCount;
@@ -123,8 +125,6 @@ public class SketchfabBrowser : EditorWindow
 
     private void Resultswiththumbs()
     {
-        //display thumbs
-        if (searchThumbs == null || searchThumbs.Count == 0) return;
         const int rowCount = 6;
         const int columnCount = 2;
         EditorGUILayout.Space();
@@ -305,8 +305,8 @@ public class SketchfabBrowser : EditorWindow
 
     async UniTask Search24(string keyword, string after= null)
     {
-        string modelInfoUrl = $"https://api.sketchfab.com/v3/search?type=models&downloadable=true&purchasable=true&tags={keyword}&name={keyword}&description={keyword}&sort_by=-likeCount&per_page=24&after={after}";
-        using (var request = UnityWebRequest.Get(modelInfoUrl))
+        string searchRequest = $"https://api.sketchfab.com/v3/search?type=models&downloadable=true&purchasable=true&tags={keyword}&name={keyword}&description={keyword}&sort_by=-likeCount&per_page=24&after={after}";
+        using (var request = UnityWebRequest.Get(searchRequest))
         {
             request.SetRequestHeader("Authorization", $"Token {apiToken}");
             await request.SendWebRequest();
