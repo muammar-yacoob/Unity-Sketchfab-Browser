@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine.Networking;
@@ -18,7 +19,7 @@ public class SketchfabBrowser : EditorWindow
     private string apiToken; 
     private bool connected;
     private string accountName;
-    public Model CurrentModel;
+    public Model CurrentModel = new Model();
     private Texture2D windowIcon;
     private GUIStyle hyperlinkStyle;
     private Texture2D thumb;
@@ -307,7 +308,7 @@ public class SketchfabBrowser : EditorWindow
     }
 
 
-    async UniTask FetchModelInfo(string modelId)
+    public async UniTask FetchModelInfo(string modelId)
     {
         string modelInfoUrl = $"https://api.sketchfab.com/v3/models/{modelId}";
         using (var request = UnityWebRequest.Get(modelInfoUrl))
@@ -353,6 +354,7 @@ public class SketchfabBrowser : EditorWindow
 
     public async UniTask DownloadModel(string modelId, string modelName)
     {
+        CurrentModel = new Model();
         CurrentModel.name = modelName;
         string downloadUrl = $"https://api.sketchfab.com/v3/models/{modelId}/download";
         using (var request = UnityWebRequest.Get(downloadUrl))
@@ -425,13 +427,6 @@ public class SketchfabBrowser : EditorWindow
             {
                 ZipFile.ExtractToDirectory(savePath, unpackPath);
             });
-            
-            var targetObject = AssetDatabase.LoadAssetAtPath<Object>(savePath);
-            if (targetObject != null)
-            {
-                Selection.activeObject = targetObject;
-                EditorGUIUtility.PingObject(targetObject);
-            }
         }
         catch (IOException e)
         {
@@ -441,6 +436,16 @@ public class SketchfabBrowser : EditorWindow
         File.Delete(savePath);
         Debug.Log($"Model is downloaded to: " + defaultSavePath);
         
+        var targetFilePath = Directory.EnumerateFiles(unpackPath).FirstOrDefault();
+        if (targetFilePath != null)
+        {
+            var targetObject = AssetDatabase.LoadAssetAtPath<Object>(targetFilePath);
+            if (targetObject != null)
+            {
+                Selection.activeObject = targetObject;
+                EditorGUIUtility.PingObject(targetObject);
+            }
+        }
     }
 
     [System.Serializable]

@@ -37,7 +37,7 @@ public class GridPanel
                 hyperlinkStyle ??= new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } , alignment = TextAnchor.LowerCenter};
 
                 // Background
-                EditorGUI.DrawRect(panelRect, Color.blue);
+                //EditorGUI.DrawRect(panelRect, Color.black);
 
                 // Thumbnail
                 Rect imageRect = new Rect(panelRect.x, panelRect.y, panelRect.width, panelHeight - 20f);
@@ -49,7 +49,7 @@ public class GridPanel
                 GUI.DrawTexture(imageRect, icon, ScaleMode.ScaleToFit);
 
                 // Button
-                Rect buttonRect = new Rect(panelRect.x, panelRect.y + panelRect.height - 20f, panelRect.width, 20f);
+                Rect buttonRect = new Rect(panelRect.x, panelRect.y + panelRect.height - 20f, imageRect.width, 20f);
                 
                 // Description
                 if (showDetails)
