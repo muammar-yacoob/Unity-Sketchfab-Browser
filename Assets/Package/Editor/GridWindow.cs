@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Package.Runtime;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ public class GridPanel
     private GUIStyle hyperlinkStyle;
     private GUIStyle labelStyle;
 
-    public void Draw(float w, SketchfabBrowser.Model[] models, List<SearchThumb> searchThumbs)
+    public void Draw(float w, Model[] models, List<SearchThumb> searchThumbs)
     {
         float panelWidth = (w - 100) / columnCount;
         Rect rect = new Rect(0, 0, panelWidth, 0);
