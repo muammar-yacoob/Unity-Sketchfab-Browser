@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Package.Runtime;
 using UnityEngine.Networking;
-using UnityEngine.Serialization;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 public class SketchfabBrowser : EditorWindow

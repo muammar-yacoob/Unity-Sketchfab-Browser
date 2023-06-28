@@ -24,7 +24,7 @@ public class GridPanel
         for (int row = 0; row < rowCount; row++)
         {
             GUILayout.BeginHorizontal();
-            // GUILayout.Space(padding);
+            GUILayout.Space(padding);
             for (int col = 0; col < columnCount; col++)
             {
                 if (thumbIndex >= searchThumbs.Count) break;
@@ -93,7 +93,6 @@ public class GridPanel
             }
             GUILayout.EndHorizontal();
             rect.height += panelHeight;
-            // GUILayout.Space(padding + 60);
         }
     }
 }
