@@ -37,6 +37,7 @@ public class SketchfabBrowser : EditorWindow
     private GridPanel panelDrawer;
 
 
+
     [MenuItem("Assets/Sketchfab Browser")]
     public static void ShowWindow()
     {
@@ -55,6 +56,7 @@ public class SketchfabBrowser : EditorWindow
     }
 
     public static SketchfabBrowser Instance { get; private set; }
+    public bool IsDownloading { get; set; }
 
     private void OnGUI()
     {
@@ -274,7 +276,7 @@ public class SketchfabBrowser : EditorWindow
             }
 
             pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
-            Debug.LogWarning($"Search Finished with {pageModels.results.Length} results!");
+            Debug.Log($"Search Finished with {pageModels.results.Length} results!");
             isSearching = false;
             await LoadSearchThumbs();
         }
@@ -354,8 +356,10 @@ public class SketchfabBrowser : EditorWindow
 
     public async UniTask DownloadModel(string modelId, string modelName)
     {
+        IsDownloading = true;
         CurrentModel = new Model();
         CurrentModel.name = modelName;
+        CurrentModel.IsDownloading = true;
         string downloadUrl = $"https://api.sketchfab.com/v3/models/{modelId}/download";
         using (var request = UnityWebRequest.Get(downloadUrl))
         {
@@ -382,6 +386,9 @@ public class SketchfabBrowser : EditorWindow
                 }
             }
         }
+        IsDownloading = false;
+        CurrentModel.IsDownloading = false;
+        Repaint();
     }
 
 
@@ -427,6 +434,7 @@ public class SketchfabBrowser : EditorWindow
             {
                 ZipFile.ExtractToDirectory(savePath, unpackPath);
             });
+            AssetDatabase.Refresh(); //to avoid warnings Import Error Code(4)
         }
         catch (IOException e)
         {
@@ -480,6 +488,7 @@ public class SketchfabBrowser : EditorWindow
         public string updatedAt;
         public License license;
         public string uid;
+        public bool IsDownloading;
     }
 
     [System.Serializable]

@@ -80,10 +80,12 @@ public class GridPanel
                 else 
                 {
                     string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
+                    GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
                     if (GUI.Button(buttonRect, buttonText))
                     {
                         SketchfabBrowser.Instance.DownloadModel(m.uid, m.name);
                     }
+                    GUI.enabled = true;
                 }
 
                 thumbIndex++;
