@@ -377,7 +377,7 @@ public class SketchfabBrowser : EditorWindow
         }
 
         File.Delete(savePath);
-        Debug.Log($"Model is downloaded to: " + defaultSavePath);
+        Debug.Log($"Model is downloaded to: " + savePath.Replace(".zip", ""));
 
         var targetFilePath = Directory.EnumerateFiles(unpackPath).FirstOrDefault();
         if (targetFilePath != null)
