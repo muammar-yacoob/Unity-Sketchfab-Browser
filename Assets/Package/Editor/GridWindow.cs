@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Package.Runtime;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ public class GridPanel
     private GUIStyle hyperlinkStyle;
     private GUIStyle labelStyle;
 
-    public void Draw(float w, SketchfabBrowser.Model[] models, List<SearchThumb> searchThumbs)
+    public void Draw(float w, Model[] models, List<SearchThumb> searchThumbs)
     {
         float panelWidth = (w - 100) / columnCount;
         Rect rect = new Rect(0, 0, panelWidth, 0);
@@ -23,7 +24,7 @@ public class GridPanel
         for (int row = 0; row < rowCount; row++)
         {
             GUILayout.BeginHorizontal();
-            // GUILayout.Space(padding);
+            GUILayout.Space(padding);
             for (int col = 0; col < columnCount; col++)
             {
                 if (thumbIndex >= searchThumbs.Count) break;
@@ -37,7 +38,7 @@ public class GridPanel
                 hyperlinkStyle ??= new GUIStyle(GUI.skin.label) { normal = { textColor = Color.cyan } , alignment = TextAnchor.LowerCenter};
 
                 // Background
-                EditorGUI.DrawRect(panelRect, Color.blue);
+                //EditorGUI.DrawRect(panelRect, Color.black);
 
                 // Thumbnail
                 Rect imageRect = new Rect(panelRect.x, panelRect.y, panelRect.width, panelHeight - 20f);
@@ -49,7 +50,7 @@ public class GridPanel
                 GUI.DrawTexture(imageRect, icon, ScaleMode.ScaleToFit);
 
                 // Button
-                Rect buttonRect = new Rect(panelRect.x, panelRect.y + panelRect.height - 20f, panelRect.width, 20f);
+                Rect buttonRect = new Rect(panelRect.x, panelRect.y + panelRect.height - 20f, imageRect.width, 20f);
                 
                 // Description
                 if (showDetails)
@@ -80,17 +81,18 @@ public class GridPanel
                 else 
                 {
                     string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
+                    GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
                     if (GUI.Button(buttonRect, buttonText))
                     {
                         SketchfabBrowser.Instance.DownloadModel(m.uid, m.name);
                     }
+                    GUI.enabled = true;
                 }
 
                 thumbIndex++;
             }
             GUILayout.EndHorizontal();
             rect.height += panelHeight;
-            // GUILayout.Space(padding + 60);
         }
     }
 }
