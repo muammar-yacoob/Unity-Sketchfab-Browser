@@ -85,37 +85,49 @@ public class SketchfabBrowser : EditorWindow
         GUILayout.Space(20);
 
         GUILayout.BeginHorizontal();
+
+        GUILayout.Label("Search Keyword:", GUILayout.Width(Screen.width * 0.2f));
         GUI.SetNextControlName(searchKewordInputControl);
-        searchKeyword = EditorGUILayout.TextField("Search Keyword:", searchKeyword);
+        searchKeyword = EditorGUILayout.TextField(searchKeyword, GUILayout.Width(Screen.width * 0.56f));
 
         bool canSearch = !isSearching && !string.IsNullOrEmpty(searchKeyword);
-        bool canNavigatePages = !isSearching && pageModels != null;
 
         using (new EditorGUI.DisabledScope(!canSearch))
         {
-            if (GUILayout.Button("Search") || GUI.GetNameOfFocusedControl() == searchKewordInputControl && Event.current.keyCode == KeyCode.Return)
+            if (GUILayout.Button("Search", GUILayout.Width(Screen.width * 0.2f)) || 
+                GUI.GetNameOfFocusedControl() == searchKewordInputControl && 
+                Event.current.keyCode == KeyCode.Return)
             {
                 Search24(searchKeyword).Forget();
             }
+            GUILayout.Space(2);
         }
+
         GUILayout.EndHorizontal();
+
+
+        bool canNavigatePages = !isSearching && pageModels != null;
 
         if (canNavigatePages)
         {
             GUILayout.BeginHorizontal();
 
             if(string.IsNullOrEmpty(pageModels?.previous)) GUI.enabled = false;
-            if (GUILayout.Button("Previous"))
+            if (GUILayout.Button("Previous",GUILayout.Width(Screen.width * 0.2f)))
             {
                 Search24(searchKeyword, pageModels?.previous).Forget();
             }
+
             GUI.enabled = true;
+            //GUILayout.Label("", GUILayout.Width(Screen.width * 0.6f));
+            GUILayout.FlexibleSpace();
             
             if(string.IsNullOrEmpty(pageModels?.next)) GUI.enabled = false;
-            if (GUILayout.Button("Next"))
+            if (GUILayout.Button("Next",GUILayout.Width(Screen.width * 0.2f)))
             {
                 Search24(searchKeyword, after: pageModels?.next).Forget();
             }
+            GUILayout.Space(2);
             GUI.enabled = true;
             GUILayout.EndHorizontal();
         }
