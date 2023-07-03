@@ -6,8 +6,22 @@
 	"unity": "2021.3",
 	"keywords": ["Sketchfab","Unity","Model","Spark"],
 	"author": "Spark Games",
-	"license": "ISC",
-	"dependencies": {
-	"com.cysharp.unitask": "2.3.1"
-	}
+	"license": "MIT",
+
+	"dependencies" : {
+		"com.cysharp.unitask": "2.x",
+		"jp.hadashikick.vcontainer": "1.x"
+	},
+	
+	"scopedRegistries" : [
+		{
+			"name" : "cysharp",
+			"url" : "https://package.openupm.com",
+			"scopes": [
+			"com.cysharp.unitask",
+			"com.openupm",
+			"jp.hadashikick.vcontainer"
+			]
+		}
+	]
 }

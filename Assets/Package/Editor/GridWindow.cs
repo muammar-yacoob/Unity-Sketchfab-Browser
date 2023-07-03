@@ -15,9 +15,12 @@ public class GridPanel
     float padding = 2f;
     private GUIStyle hyperlinkStyle;
     private GUIStyle labelStyle;
+    private Vector2 scrollPosition;
 
     public void Draw(float w, Model[] models, List<SearchThumb> searchThumbs)
     {
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
         float panelWidth = (w - 100) / columnCount;
         Rect rect = new Rect(0, 0, panelWidth, 0);
         int thumbIndex = 0;
@@ -27,7 +30,12 @@ public class GridPanel
             GUILayout.Space(padding);
             for (int col = 0; col < columnCount; col++)
             {
-                if (thumbIndex >= searchThumbs.Count) break;
+                if (thumbIndex >= searchThumbs.Count)
+                {
+                    GUILayout.EndHorizontal(); 
+                    EditorGUILayout.EndScrollView();
+                    return; 
+                }
 
                 var m = models[thumbIndex];
                 var icon = searchThumbs[thumbIndex].thumb;
@@ -63,13 +71,6 @@ public class GridPanel
                     labelRect.y += 20;
                     GUI.Label(labelRect, "Vertices: "+m.vertexCount.ToString("N0"), labelStyle);                
                     
-                    
-                    // labelRect.y += 20;
-                    // GUI.Label(labelRect, "Materials: "+m.materialCount, labelStyle);     
-                    //
-                    // labelRect.y += 20;
-                    // GUI.Label(labelRect, "Textures: "+m.textureCount, labelStyle);   
-                    
                     if(m.animationCount > 0)
                     {
                         labelRect.y += 20;
@@ -81,10 +82,10 @@ public class GridPanel
                 else 
                 {
                     string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
-                    GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
+                    //GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
                     if (GUI.Button(buttonRect, buttonText))
                     {
-                        SketchfabBrowser.Instance.DownloadModel(m.uid, m.name);
+                        //SketchfabBrowser.Instance.DownloadModel(m.uid, m.name);
                     }
                     GUI.enabled = true;
                 }
@@ -94,5 +95,6 @@ public class GridPanel
             GUILayout.EndHorizontal();
             rect.height += panelHeight;
         }
+        EditorGUILayout.EndScrollView();
     }
 }

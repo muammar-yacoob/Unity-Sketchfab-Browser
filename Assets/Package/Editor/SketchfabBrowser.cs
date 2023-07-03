@@ -1,16 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using UnityEngine;
 using UnityEditor;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Package.Runtime;
 using UnityEngine.Networking;
-using Object = UnityEngine.Object;
 
 public class SketchfabBrowser : EditorWindow
 {
@@ -22,10 +17,9 @@ public class SketchfabBrowser : EditorWindow
     private Texture2D windowIcon;
     private GUIStyle hyperlinkStyle;
     private Texture2D thumb;
-    private string defaultSavePath = "Assets/SketchfabModels/";
     private bool moreInfo;
     private PageModels currentPageModels;
-    private string searchKeyword = "milk";
+    private string searchKeyword;
 
     public PageModels pageModels;
     private List<SearchThumb> searchThumbs = new();
@@ -42,28 +36,24 @@ public class SketchfabBrowser : EditorWindow
     {
         SketchfabBrowser window = GetWindow<SketchfabBrowser>();
         window.titleContent = new GUIContent("Sketchfab Browser", window.windowIcon);
+        window.minSize = new Vector2(500, 500);
+        window.maxSize = new Vector2(1000, 1000);
 
     }
 
     private void OnEnable()
     {
-        windowIcon =
-            (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
+        windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
         titleContent.image = windowIcon;
-        apiToken = PlayerPrefs.GetString(SketchfabTokenKey,
-            "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
+        apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
         panelDrawer = new GridPanel();
-        Instance = this;
     }
-
-    public static SketchfabBrowser Instance { get; private set; }
-    public bool IsDownloading { get; set; }
 
     private void OnGUI()
     {
         if (Application.isPlaying)
         {
-            GUILayout.Label($"Unavailable in play mode.", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Unavailable in play mode.", MessageType.Error);
             return;
         }
 
@@ -73,45 +63,43 @@ public class SketchfabBrowser : EditorWindow
         }
         else
         {
-            GUILayout.Label($"Connected as {accountName}", EditorStyles.boldLabel);
 
-            #region ٍSearch Button
+            EditorGUILayout.HelpBox($"Connected as {accountName}",MessageType.Info);
+            //GUILayout.Label($"Connected as {accountName}", EditorStyles.boldLabel);
 
-            GUILayout.Space(20);
+            DrawSearchUI();
 
-            string searchKewordInput = "SearchKeywordInput";
-            GUI.SetNextControlName(searchKewordInput);
-            searchKeyword = EditorGUILayout.TextField("keyword", searchKeyword);
-            GUI.enabled = !isSearching || string.IsNullOrEmpty(searchKeyword);
-            if (GUILayout.Button("Search"))
-            {
-                Search24(searchKeyword).Forget();
-            }
-
-            GUI.enabled = true;
-
-            if (GUI.GetNameOfFocusedControl() == searchKewordInput && Event.current.keyCode == KeyCode.Return)
-            {
-                Search24(searchKeyword).Forget();
-            }
-
-            #endregion
-
-            if (pageModels.results.Length > 0)
+            if (pageModels?.results?.Length > 0)
             {
                 DisplayResults();
                 return;
             }
-
-            GUILayout.Label("No models available.");
+            EditorGUILayout.HelpBox($"No models found with the keyword {searchKeyword}.",MessageType.Info);
         }
+    }
+
+    private void DrawSearchUI()
+    {
+            GUILayout.Space(20);
+
+            string searchKewordInputControl = "Cupcake";
+            GUI.SetNextControlName(searchKewordInputControl);
+            searchKeyword = EditorGUILayout.TextField("keyword", searchKeyword);
+
+            using (new EditorGUI.DisabledScope(isSearching || string.IsNullOrEmpty(searchKeyword)))
+            {
+                if (GUILayout.Button("Search") || (GUI.GetNameOfFocusedControl() == searchKewordInputControl && Event.current.keyCode == KeyCode.Return))
+                    Search24(searchKeyword).Forget();
+            }
+
+            if (Event.current.type == EventType.Repaint) GUI.FocusControl(searchKewordInputControl);
     }
 
     private void DisplayResults()
     {
-        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+        //scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
         panelDrawer.Draw(position.width, pageModels.results, searchThumbs);
-        EditorGUILayout.EndScrollView();
+        //EditorGUILayout.EndScrollView();
     }
 
 
@@ -188,10 +176,11 @@ public class SketchfabBrowser : EditorWindow
 
 
     async UniTaskVoid FetchInfo() => await FetchModelInfo(modelId);
-    async UniTaskVoid Download() => await DownloadModel(modelId, CurrentModel.name);
+    //async UniTaskVoid Download() => await DownloadModel(modelId, CurrentModel.name);
 
     async UniTask Search24(string keyword, string after = null)
     {
+        if (isSearching) return;
         isSearching = true;
         GUI.FocusControl(null);
 
@@ -211,6 +200,7 @@ public class SketchfabBrowser : EditorWindow
 
             pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
             Debug.Log($"Search Finished with {pageModels.results.Length} results!");
+            GUI.FocusControl(searchKeyword);
             isSearching = false;
             await LoadSearchThumbs();
         }
@@ -289,107 +279,5 @@ public class SketchfabBrowser : EditorWindow
         }
     }
 
-    public async UniTask DownloadModel(string modelId, string modelName)
-    {
-        IsDownloading = true;
-        CurrentModel = new Model();
-        CurrentModel.name = modelName;
-        CurrentModel.IsDownloading = true;
-        string downloadUrl = $"https://api.sketchfab.com/v3/models/{modelId}/download";
-        using (var request = UnityWebRequest.Get(downloadUrl))
-        {
-            request.SetRequestHeader("Authorization", $"Token {apiToken}");
-            await request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.ConnectionError ||
-                request.result == UnityWebRequest.Result.ProtocolError)
-            {
-                Debug.LogError("Error: " + request.error);
-            }
-            else if (request.result == UnityWebRequest.Result.Success)
-            {
-                if (request.responseCode == 401)
-                {
-                    Debug.LogError("Unauthorized: Invalid API token.");
-                }
-                else
-                {
-                    ModelDownloadInfo downloadInfo =
-                        JsonUtility.FromJson<ModelDownloadInfo>(request.downloadHandler.text);
-
-
-                    await DownloadModelFromUrl(downloadInfo.gltf.url, ModelFormatExtension.gltf);
-                    //await DownloadModelFromUrl(downloadInfo.source.url, ModelFormatExtension.fbx);
-                }
-            }
-        }
-
-        IsDownloading = false;
-        CurrentModel.IsDownloading = false;
-        Repaint();
-    }
-
-
-    async UniTask DownloadModelFromUrl(string url, ModelFormatExtension ext)
-    {
-        using (var request = UnityWebRequest.Get(url))
-        {
-            await request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                byte[] modelBytes = request.downloadHandler.data;
-
-                string fileName = CurrentModel.name + $".zip";
-                //string savePath = EditorUtility.SaveFilePanel("Save Model", "", modelId, "");
-                Directory.CreateDirectory(defaultSavePath);
-                string savePath = Path.Combine(defaultSavePath, fileName);
-
-                File.WriteAllBytes(savePath, modelBytes);
-
-                Unzip(savePath);
-            }
-            else
-            {
-                Debug.LogError("Failed to download the model: " + request.error);
-            }
-        }
-    }
-
-    private async Task Unzip(string savePath)
-    {
-        string unpackPath = $"{defaultSavePath}/{CurrentModel.name}";
-        if (Directory.Exists(unpackPath))
-        {
-            Directory.Delete(unpackPath, true);
-        }
-
-        Directory.CreateDirectory(unpackPath);
-
-        try
-        {
-            await UniTask.Run(() => { ZipFile.ExtractToDirectory(savePath, unpackPath); });
-            AssetDatabase.Refresh(); //to avoid warnings Import Error Code(4)
-        }
-        catch (IOException e)
-        {
-            Debug.LogError("Failed to unzip the model: " + e.Message);
-        }
-
-        File.Delete(savePath);
-        Debug.Log($"Model is downloaded to: " + savePath.Replace(".zip", ""));
-
-        var targetFilePath = Directory.EnumerateFiles(unpackPath).FirstOrDefault();
-        if (targetFilePath != null)
-        {
-            var targetObject = AssetDatabase.LoadAssetAtPath<Object>(targetFilePath);
-            if (targetObject != null)
-            {
-                Selection.activeObject = targetObject;
-                EditorGUIUtility.PingObject(targetObject);
-            }
-        }
-    }
+   
 }
-
-    

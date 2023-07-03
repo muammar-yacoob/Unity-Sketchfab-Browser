@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Package.Runtime
 {
@@ -64,7 +65,8 @@ namespace Package.Runtime
     [System.Serializable]
     public class ModelDownloadInfo
     {
-        public ModelFormat gltf;
+        public ModelFormat GLTFFile;
+        public ModelFormat FBXFile;
         public ModelFormat source;
 
         [System.Serializable]

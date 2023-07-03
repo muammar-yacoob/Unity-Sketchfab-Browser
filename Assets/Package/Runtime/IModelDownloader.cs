@@ -5,6 +5,6 @@ namespace Package.Runtime
 {
     public interface IModelDownloader
     {
-        UniTask DownloadModel(Action<float> onDownloadProgress, Action<string> onSuccess, Action<string> onFail);
+        UniTaskVoid DownloadModel(string modelId, Action<float> onDownloadProgress = null);
     }
 }
