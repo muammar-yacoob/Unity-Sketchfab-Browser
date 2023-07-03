@@ -10,7 +10,7 @@
 
 	"dependencies" : {
 		"com.cysharp.unitask": "2.x",
-		"jp.hadashikick.vcontainer": "1.x"
+		"com.atteneder.gltfast" : "5.0.4"
 	},
 	
 	"scopedRegistries" : [
@@ -20,7 +20,7 @@
 			"scopes": [
 			"com.cysharp.unitask",
 			"com.openupm",
-			"jp.hadashikick.vcontainer"
+			"com.atteneder"
 			]
 		}
 	]
