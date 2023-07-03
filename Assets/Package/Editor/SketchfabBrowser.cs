@@ -11,6 +11,8 @@ using UnityEngine.Networking;
 public class SketchfabBrowser : EditorWindow
 {
     private string modelId = "564e02a97528499388ca00d3c6bdb044";
+    string searchKewordInputControl = "Cupcake";
+
     private string apiToken;
     private bool connected;
     private string accountName;
@@ -69,41 +71,76 @@ public class SketchfabBrowser : EditorWindow
 
             DrawSearchUI();
 
-            if (pageModels?.results?.Length > 0)
+            if (pageModels?.results?.Length > 0 && !isSearching)
             {
                 DisplayResults();
                 return;
             }
-            EditorGUILayout.HelpBox($"No models found with the keyword {searchKeyword}.",MessageType.Info);
         }
     }
+
 
     private void DrawSearchUI()
     {
         GUILayout.Space(20);
 
-        string searchKewordInputControl = "Cupcake";
+        GUILayout.BeginHorizontal();
         GUI.SetNextControlName(searchKewordInputControl);
         searchKeyword = EditorGUILayout.TextField("Search Keyword:", searchKeyword);
 
-        using (new EditorGUI.DisabledScope(isSearching || string.IsNullOrEmpty(searchKeyword)))
+        bool canSearch = !isSearching && !string.IsNullOrEmpty(searchKeyword);
+        bool canNavigatePages = !isSearching && pageModels != null;
+
+        using (new EditorGUI.DisabledScope(!canSearch))
         {
-            if (GUILayout.Button("Search") || (GUI.GetNameOfFocusedControl() == searchKewordInputControl &&
-                                               Event.current.keyCode == KeyCode.Return))
+            if (GUILayout.Button("Search") || GUI.GetNameOfFocusedControl() == searchKewordInputControl && Event.current.keyCode == KeyCode.Return)
+            {
                 Search24(searchKeyword).Forget();
+            }
+        }
+        GUILayout.EndHorizontal();
+
+        if (canNavigatePages)
+        {
+            GUILayout.BeginHorizontal();
+
+            if(string.IsNullOrEmpty(pageModels?.previous)) GUI.enabled = false;
+            if (GUILayout.Button("Previous"))
+            {
+                Search24(searchKeyword, pageModels?.previous).Forget();
+            }
+            GUI.enabled = true;
+            
+            if(string.IsNullOrEmpty(pageModels?.next)) GUI.enabled = false;
+            if (GUILayout.Button("Next"))
+            {
+                Search24(searchKeyword, after: pageModels?.next).Forget();
+            }
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
         }
 
-        if (pageModels == null) return;
+        if (pageModels != null && !isSearching)
+        {
+            string resultMsg = pageModels.results.Length < 24 ? $"{pageModels.results.Length} models found." : "Showing 24 models.";
+            GUILayout.Label(resultMsg, EditorStyles.boldLabel);
+        }
+        else if (isSearching)
+        {
+            GUILayout.Label("Searching...", EditorStyles.boldLabel);
+        }
+        else if (pageModels == null)
+        {
+            EditorGUILayout.HelpBox($"No models found with the keyword {searchKeyword}.",MessageType.Info);
 
-        var resultMsg = "";
-        if (pageModels.results.Length < 24) resultMsg = $"{pageModels.results.Length} models found.";
-        else resultMsg = $"Showing 24 models.";
+        }
 
-        GUILayout.Label(resultMsg, EditorStyles.boldLabel);
         if (Event.current.type == EventType.Repaint) GUI.FocusControl(searchKewordInputControl);
     }
 
-    private void DisplayResults()
+
+    
+ private void DisplayResults()
     {
         //scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
         panelDrawer.Draw(position.width, pageModels.results, searchThumbs);
@@ -212,7 +249,7 @@ public class SketchfabBrowser : EditorWindow
             }
 
             pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
-            Debug.Log($"Search Finished with {pageModels.results.Length} results!");
+            //Debug.Log($"Search Finished with {pageModels.results.Length} results!");
             GUI.FocusControl(searchKeyword);
             isSearching = false;
             await LoadSearchThumbs();
