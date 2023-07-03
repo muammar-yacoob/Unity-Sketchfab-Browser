@@ -7,7 +7,8 @@ namespace Package.Runtime
     public class PageModels
     {
         public Model[] results;
-        public Pagination pagination;
+        public string next;
+        public string previous;
     }
     
     [System.Serializable]

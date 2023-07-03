@@ -11,6 +11,8 @@ using UnityEngine.Networking;
 public class SketchfabBrowser : EditorWindow
 {
     private string modelId = "564e02a97528499388ca00d3c6bdb044";
+    string searchKewordInputControl = "Cupcake";
+
     private string apiToken;
     private bool connected;
     private string accountName;
@@ -69,41 +71,88 @@ public class SketchfabBrowser : EditorWindow
 
             DrawSearchUI();
 
-            if (pageModels?.results?.Length > 0)
+            if (pageModels?.results?.Length > 0 && !isSearching)
             {
                 DisplayResults();
                 return;
             }
-            EditorGUILayout.HelpBox($"No models found with the keyword {searchKeyword}.",MessageType.Info);
         }
     }
+
 
     private void DrawSearchUI()
     {
         GUILayout.Space(20);
 
-        string searchKewordInputControl = "Cupcake";
-        GUI.SetNextControlName(searchKewordInputControl);
-        searchKeyword = EditorGUILayout.TextField("Search Keyword:", searchKeyword);
+        GUILayout.BeginHorizontal();
 
-        using (new EditorGUI.DisabledScope(isSearching || string.IsNullOrEmpty(searchKeyword)))
+        GUILayout.Label("Search Keyword:", GUILayout.Width(Screen.width * 0.2f));
+        GUI.SetNextControlName(searchKewordInputControl);
+        searchKeyword = EditorGUILayout.TextField(searchKeyword, GUILayout.Width(Screen.width * 0.56f));
+
+        bool canSearch = !isSearching && !string.IsNullOrEmpty(searchKeyword);
+
+        using (new EditorGUI.DisabledScope(!canSearch))
         {
-            if (GUILayout.Button("Search") || (GUI.GetNameOfFocusedControl() == searchKewordInputControl &&
-                                               Event.current.keyCode == KeyCode.Return))
+            if (GUILayout.Button("Search", GUILayout.Width(Screen.width * 0.2f)) || 
+                GUI.GetNameOfFocusedControl() == searchKewordInputControl && 
+                Event.current.keyCode == KeyCode.Return)
+            {
                 Search24(searchKeyword).Forget();
+            }
+            GUILayout.Space(2);
         }
 
-        if (pageModels == null) return;
+        GUILayout.EndHorizontal();
 
-        var resultMsg = "";
-        if (pageModels.results.Length < 24) resultMsg = $"{pageModels.results.Length} models found.";
-        else resultMsg = $"Showing 24 models.";
 
-        GUILayout.Label(resultMsg, EditorStyles.boldLabel);
+        bool canNavigatePages = !isSearching && pageModels != null;
+
+        if (canNavigatePages)
+        {
+            GUILayout.BeginHorizontal();
+
+            if(string.IsNullOrEmpty(pageModels?.previous)) GUI.enabled = false;
+            if (GUILayout.Button("Previous",GUILayout.Width(Screen.width * 0.2f)))
+            {
+                Search24(searchKeyword, pageModels?.previous).Forget();
+            }
+
+            GUI.enabled = true;
+            //GUILayout.Label("", GUILayout.Width(Screen.width * 0.6f));
+            GUILayout.FlexibleSpace();
+            
+            if(string.IsNullOrEmpty(pageModels?.next)) GUI.enabled = false;
+            if (GUILayout.Button("Next",GUILayout.Width(Screen.width * 0.2f)))
+            {
+                Search24(searchKeyword, after: pageModels?.next).Forget();
+            }
+            GUILayout.Space(2);
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
+        }
+
+        if (pageModels != null && !isSearching)
+        {
+            string resultMsg = pageModels.results.Length < 24 ? $"{pageModels.results.Length} models found." : "Showing 24 models.";
+            GUILayout.Label(resultMsg, EditorStyles.boldLabel);
+        }
+        else if (isSearching)
+        {
+            GUILayout.Label("Searching...", EditorStyles.boldLabel);
+        }
+        else if (pageModels == null)
+        {
+            EditorGUILayout.HelpBox($"No models found with the keyword {searchKeyword}.",MessageType.Info);
+
+        }
+
         if (Event.current.type == EventType.Repaint) GUI.FocusControl(searchKewordInputControl);
     }
 
-    private void DisplayResults()
+
+    
+ private void DisplayResults()
     {
         //scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
         panelDrawer.Draw(position.width, pageModels.results, searchThumbs);
@@ -197,6 +246,7 @@ public class SketchfabBrowser : EditorWindow
         isSearching = true;
         GUI.FocusControl(null);
 
+        keyword = keyword.Trim().Replace(" ", ",");
         string searchRequest =
             $"https://api.sketchfab.com/v3/search?type=models&downloadable=true&purchasable=true&tags={keyword}&name={keyword}&description={keyword}&sort_by=-likeCount&per_page=24&after={after}";
         using (var request = UnityWebRequest.Get(searchRequest))
@@ -212,7 +262,7 @@ public class SketchfabBrowser : EditorWindow
             }
 
             pageModels = JsonUtility.FromJson<PageModels>(request.downloadHandler.text);
-            Debug.Log($"Search Finished with {pageModels.results.Length} results!");
+            //Debug.Log($"Search Finished with {pageModels.results.Length} results!");
             GUI.FocusControl(searchKeyword);
             isSearching = false;
             await LoadSearchThumbs();
@@ -291,6 +341,4 @@ public class SketchfabBrowser : EditorWindow
             return default;
         }
     }
-
-   
 }

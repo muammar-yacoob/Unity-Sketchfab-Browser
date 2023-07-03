@@ -65,8 +65,10 @@ public class GridPanel
                 // Description
                 if (showDetails)
                 {
-                    EditorGUI.DrawRect(panelRect, new Color(0,0,0,0.7f));
+                    EditorGUI.DrawRect(panelRect, new Color(0,0,0,0.6f));
                     Rect labelRect = new Rect(panelRect.x, panelRect.y, panelRect.width, 20f);
+                    labelRect.y += (m.animationCount == 0) ? 25 : 15;
+                        
                     GUI.Label(labelRect, m.name, labelStyle);
                     labelRect.y += 20;
                     GUI.Label(labelRect, m.license.label, labelStyle);
