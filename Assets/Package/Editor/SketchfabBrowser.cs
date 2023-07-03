@@ -246,6 +246,7 @@ public class SketchfabBrowser : EditorWindow
         isSearching = true;
         GUI.FocusControl(null);
 
+        keyword = keyword.Trim().Replace(" ", ",");
         string searchRequest =
             $"https://api.sketchfab.com/v3/search?type=models&downloadable=true&purchasable=true&tags={keyword}&name={keyword}&description={keyword}&sort_by=-likeCount&per_page=24&after={after}";
         using (var request = UnityWebRequest.Get(searchRequest))
@@ -340,6 +341,4 @@ public class SketchfabBrowser : EditorWindow
             return default;
         }
     }
-
-   
 }
