@@ -43,12 +43,13 @@ namespace SparkGames.Sketchfab.Package.Editor
 
         public void SetDownloadPath(string downloadPath) => this.absoluteDownloadPath = downloadPath;
 
-        public async UniTaskVoid DownloadModel(string modelId, Action<float> onDownloadProgress = null)
+        public async UniTaskVoid DownloadModel(Model model , Action<float> onDownloadProgress = null)
         {
-            currentModel = await DescribeModel(modelId);
+            model.IsDownloading = true;
+            currentModel = await DescribeModel(model.uid);
             Debug.Log($"Downloading {currentModel.name}...");
         
-            string downloadRequest = $"https://api.sketchfab.com/v3/models/{modelId}/download";
+            string downloadRequest = $"https://api.sketchfab.com/v3/models/{model.uid}/download";
             using var request = UnityWebRequest.Get(downloadRequest);
             request.SetRequestHeader("Authorization", $"Token {apiToken}");
             await request.SendWebRequest();
@@ -63,6 +64,7 @@ namespace SparkGames.Sketchfab.Package.Editor
             {
                 Debug.LogError("Error: " + request.error);
             }
+            model.IsDownloading = false;
         }
 
         private async UniTask<Model> DescribeModel(string modelId)

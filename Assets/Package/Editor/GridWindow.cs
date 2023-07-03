@@ -17,6 +17,7 @@ public class GridPanel
     private GUIStyle hyperlinkStyle;
     private GUIStyle labelStyle;
     private Vector2 scrollPosition;
+    private float progress = 0;
 
     public void Draw(float w, Model[] models, List<SearchThumb> searchThumbs)
     {
@@ -82,12 +83,22 @@ public class GridPanel
                 }
                 else 
                 {
-                    string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
-                    //GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
-                    if (GUI.Button(buttonRect, buttonText))
+                    if (m.IsDownloading == false)
                     {
-                       ModelDownloader.Instance.DownloadModel(m.uid, onDownloadProgress);
+
+                        string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
+                        //GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
+                        if (GUI.Button(buttonRect, buttonText))
+                        {
+                            progress = 0;
+                            ModelDownloader.Instance.DownloadModel(m, onDownloadProgress: (p) => progress = p);
+                        }
                     }
+                    else
+                    {
+                        DrawProgressBar(progress, buttonRect);
+                    }
+
                     GUI.enabled = true;
                 }
 
@@ -99,8 +110,11 @@ public class GridPanel
         EditorGUILayout.EndScrollView();
     }
 
-    private void onDownloadProgress(float percent)
+    
+    private void DrawProgressBar(float percent, Rect buttonRect)
     {
-        Debug.Log((percent * 100).ToString("N0") + "%");
+        string percentString = (percent * 100).ToString("N0") + "%";
+        Debug.Log(percentString);
+        EditorGUI.ProgressBar(buttonRect, percent, percentString);
     }
 }
