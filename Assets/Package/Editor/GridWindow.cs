@@ -88,15 +88,22 @@ public class GridPanel
 
                         string buttonText = m.price == 0 ? "Download" : $"Buy ${m.price}";
                         //GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
+                        
+                        if(m.IsDownloaded)
+                        {
+                            buttonText = "Downloaded";
+                            GUI.enabled = false;
+                        }
                         if (GUI.Button(buttonRect, buttonText))
                         {
                             progress = 0;
-                            ModelDownloader.Instance.DownloadModel(m, onDownloadProgress: (p) => progress = p);
+                            ModelDownloader.Instance.DownloadModel(m, onDownloadProgress: (p) => m.DownloadProgress = p);
                         }
+                        GUI.enabled = true;
                     }
                     else
                     {
-                        DrawProgressBar(progress, buttonRect);
+                        DrawProgressBar(m.DownloadProgress, buttonRect);
                     }
 
                     GUI.enabled = true;
@@ -114,7 +121,7 @@ public class GridPanel
     private void DrawProgressBar(float percent, Rect buttonRect)
     {
         string percentString = (percent * 100).ToString("N0") + "%";
-        Debug.Log(percentString);
         EditorGUI.ProgressBar(buttonRect, percent, percentString);
+        //Debug.Log(percentString);
     }
 }

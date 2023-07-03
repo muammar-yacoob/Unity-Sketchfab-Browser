@@ -36,6 +36,8 @@ namespace Package.Runtime
         public License license;
         public string uid;
         public bool IsDownloading;
+        public float DownloadProgress;
+        public bool IsDownloaded;
     }
 
     [System.Serializable]

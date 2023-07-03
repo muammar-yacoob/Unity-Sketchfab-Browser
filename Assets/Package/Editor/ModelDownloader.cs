@@ -43,7 +43,7 @@ namespace SparkGames.Sketchfab.Package.Editor
 
         public void SetDownloadPath(string downloadPath) => this.absoluteDownloadPath = downloadPath;
 
-        public async UniTaskVoid DownloadModel(Model model , Action<float> onDownloadProgress = null)
+        public async UniTaskVoid DownloadModel(Model model, Action<float> onDownloadProgress = null)
         {
             model.IsDownloading = true;
             currentModel = await DescribeModel(model.uid);
@@ -59,6 +59,7 @@ namespace SparkGames.Sketchfab.Package.Editor
 
                 var downloadInfo = JsonUtility.FromJson<ModelDownloadInfo>(request.downloadHandler.text);
                 await DownloadModelFromUrl(downloadInfo.gltf.url, onDownloadProgress);
+                model.IsDownloaded = true;
             }
             else
             {
@@ -148,6 +149,8 @@ namespace SparkGames.Sketchfab.Package.Editor
                 }
             }
         }
+
+  
     }
 }
 
