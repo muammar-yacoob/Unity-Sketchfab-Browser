@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Package.Runtime
 {
@@ -35,6 +36,8 @@ namespace Package.Runtime
         public License license;
         public string uid;
         public bool IsDownloading;
+        public float DownloadProgress;
+        public bool IsDownloaded;
     }
 
     [System.Serializable]
@@ -64,6 +67,7 @@ namespace Package.Runtime
     [System.Serializable]
     public class ModelDownloadInfo
     {
+        public ModelFormat glb;
         public ModelFormat gltf;
         public ModelFormat source;
 
@@ -79,7 +83,7 @@ namespace Package.Runtime
     public enum ModelFormatExtension
     {
         gltf,
-        fbx
+        glb
     }
 }
 
