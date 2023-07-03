@@ -101,6 +101,6 @@ public class GridPanel
 
     private void onDownloadProgress(float percent)
     {
-        Debug.Log(percent.ToString("N0") + "%");
+        Debug.Log((percent * 100).ToString("N0") + "%");
     }
 }

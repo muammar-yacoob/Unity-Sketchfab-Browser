@@ -65,8 +65,8 @@ namespace Package.Runtime
     [System.Serializable]
     public class ModelDownloadInfo
     {
-        public ModelFormat GLTFFile;
-        public ModelFormat FBXFile;
+        public ModelFormat glb;
+        public ModelFormat gltf;
         public ModelFormat source;
 
         [System.Serializable]
@@ -81,7 +81,7 @@ namespace Package.Runtime
     public enum ModelFormatExtension
     {
         gltf,
-        fbx
+        glb
     }
 }
 

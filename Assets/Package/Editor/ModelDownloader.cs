@@ -10,15 +10,14 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;
 
-//[Injectable]
-
 namespace SparkGames.Sketchfab.Package.Editor
 {
-    [CreateAssetMenu(fileName = "ModelDownloader", menuName = "Sketchfab Browser/ModelDownloader", order = 1)]
+    //[CreateAssetMenu(fileName = "ModelDownloader", menuName = "Sketchfab Browser/ModelDownloader", order = 1)]
     public class ModelDownloader : ScriptableObject, IModelDownloader
     {
         [NonSerialized] private string apiToken;
-        [NonSerialized] private string downloadPath;
+        [NonSerialized] private string absoluteDownloadPath;
+        private string relativeDownloadPath;
         
         private Model currentModel;
         private const string SketchfabTokenKey = "SketchfabTokenKey";
@@ -30,7 +29,9 @@ namespace SparkGames.Sketchfab.Package.Editor
         private void OnEnable()
         {
             apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
-            downloadPath = Application.dataPath;
+            absoluteDownloadPath ??= Application.dataPath + "/Sketchfab Models";
+            relativeDownloadPath = absoluteDownloadPath.Substring(absoluteDownloadPath.IndexOf("Assets"));
+
         }
 
         public void SetToken(string apiToken)
@@ -40,7 +41,7 @@ namespace SparkGames.Sketchfab.Package.Editor
             PlayerPrefs.Save();
         }
 
-        public void SetDownloadPath(string downloadPath) => this.downloadPath = downloadPath;
+        public void SetDownloadPath(string downloadPath) => this.absoluteDownloadPath = downloadPath;
 
         public async UniTaskVoid DownloadModel(string modelId, Action<float> onDownloadProgress = null)
         {
@@ -56,7 +57,7 @@ namespace SparkGames.Sketchfab.Package.Editor
                 if (request.responseCode == 401) throw new UnauthorizedAccessException("Invalid API token");
 
                 var downloadInfo = JsonUtility.FromJson<ModelDownloadInfo>(request.downloadHandler.text);
-                await DownloadModelFromUrl(downloadInfo.FBXFile.url, onDownloadProgress);
+                await DownloadModelFromUrl(downloadInfo.gltf.url, onDownloadProgress);
             }
             else
             {
@@ -101,8 +102,8 @@ namespace SparkGames.Sketchfab.Package.Editor
                 byte[] modelBytes = request.downloadHandler.data;
 
                 string fileName = currentModel.name + $".zip";
-                Directory.CreateDirectory(downloadPath);
-                string savePath = Path.Combine(downloadPath, fileName);
+                Directory.CreateDirectory(absoluteDownloadPath);
+                string savePath = Path.Combine(absoluteDownloadPath, fileName);
                 File.WriteAllBytes(savePath, modelBytes);
                 await Unzip(savePath);
             }
@@ -115,14 +116,14 @@ namespace SparkGames.Sketchfab.Package.Editor
 
         private async Task Unzip(string savePath, Action<float> onUnpackProgress = null)
         {
-            string unpackPath = $"{downloadPath}/{currentModel.name}";
+            string unpackPath = $"{relativeDownloadPath}/{currentModel.name}";
             if (Directory.Exists(unpackPath)) Directory.Delete(unpackPath, true);
             Directory.CreateDirectory(unpackPath);
 
             try
             {
                 await UniTask.RunOnThreadPool(() => { ZipFile.ExtractToDirectory(savePath, unpackPath); });
-                AssetDatabase.Refresh();
+                //AssetDatabase.Refresh();
             }
             catch (IOException e)
             {
@@ -131,6 +132,8 @@ namespace SparkGames.Sketchfab.Package.Editor
 
             File.Delete(savePath);
             Debug.Log($"Model is downloaded to: " + savePath.Replace(".zip", ""));
+            
+            AssetDatabase.Refresh();
 
             var targetFilePath = Directory.EnumerateFiles(unpackPath).FirstOrDefault();
             if (targetFilePath != null)
