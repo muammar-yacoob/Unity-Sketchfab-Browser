@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Package.Runtime;
+using SparkGames.Sketchfab.Package.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -85,7 +86,7 @@ public class GridPanel
                     //GUI.enabled = !SketchfabBrowser.Instance.CurrentModel.IsDownloading;
                     if (GUI.Button(buttonRect, buttonText))
                     {
-                        //SketchfabBrowser.Instance.DownloadModel(m.uid, m.name);
+                       ModelDownloader.Instance.DownloadModel(m.uid, onDownloadProgress);
                     }
                     GUI.enabled = true;
                 }
@@ -96,5 +97,10 @@ public class GridPanel
             rect.height += panelHeight;
         }
         EditorGUILayout.EndScrollView();
+    }
+
+    private void onDownloadProgress(float percent)
+    {
+        Debug.Log(percent.ToString("N0") + "%");
     }
 }

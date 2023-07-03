@@ -5,6 +5,7 @@ using UnityEditor;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Package.Runtime;
+using SparkGames.Sketchfab.Package.Editor;
 using UnityEngine.Networking;
 
 public class SketchfabBrowser : EditorWindow
@@ -24,7 +25,6 @@ public class SketchfabBrowser : EditorWindow
     public PageModels pageModels;
     private List<SearchThumb> searchThumbs = new();
     private bool isSearching;
-    private const string SketchfabTokenKey = "SketchfabTokenKey";
 
     private Vector2 scrollPosition;
     private GridPanel panelDrawer;
@@ -45,8 +45,8 @@ public class SketchfabBrowser : EditorWindow
     {
         windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
         titleContent.image = windowIcon;
-        apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
         panelDrawer = new GridPanel();
+        apiToken = ModelDownloader.Instance.ApiToken;
     }
 
     private void OnGUI()
@@ -80,19 +80,27 @@ public class SketchfabBrowser : EditorWindow
 
     private void DrawSearchUI()
     {
-            GUILayout.Space(20);
+        GUILayout.Space(20);
 
-            string searchKewordInputControl = "Cupcake";
-            GUI.SetNextControlName(searchKewordInputControl);
-            searchKeyword = EditorGUILayout.TextField("keyword", searchKeyword);
+        string searchKewordInputControl = "Cupcake";
+        GUI.SetNextControlName(searchKewordInputControl);
+        searchKeyword = EditorGUILayout.TextField("Search Keyword:", searchKeyword);
 
-            using (new EditorGUI.DisabledScope(isSearching || string.IsNullOrEmpty(searchKeyword)))
-            {
-                if (GUILayout.Button("Search") || (GUI.GetNameOfFocusedControl() == searchKewordInputControl && Event.current.keyCode == KeyCode.Return))
-                    Search24(searchKeyword).Forget();
-            }
+        using (new EditorGUI.DisabledScope(isSearching || string.IsNullOrEmpty(searchKeyword)))
+        {
+            if (GUILayout.Button("Search") || (GUI.GetNameOfFocusedControl() == searchKewordInputControl &&
+                                               Event.current.keyCode == KeyCode.Return))
+                Search24(searchKeyword).Forget();
+        }
 
-            if (Event.current.type == EventType.Repaint) GUI.FocusControl(searchKewordInputControl);
+        if (pageModels == null) return;
+
+        var resultMsg = "";
+        if (pageModels.results.Length < 24) resultMsg = $"{pageModels.results.Length} models found.";
+        else resultMsg = $"Showing 24 models.";
+
+        GUILayout.Label(resultMsg, EditorStyles.boldLabel);
+        if (Event.current.type == EventType.Repaint) GUI.FocusControl(searchKewordInputControl);
     }
 
     private void DisplayResults()
@@ -155,19 +163,24 @@ public class SketchfabBrowser : EditorWindow
         using (var request = UnityWebRequest.Get(url))
         {
             request.SetRequestHeader("Authorization", $"Token {token}");
-            await request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
+            try
             {
-                connected = true;
-                AccountInfo accountInfo = JsonUtility.FromJson<AccountInfo>(request.downloadHandler.text);
-                accountName = accountInfo.username;
-                Repaint();
+                await request.SendWebRequest();
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    connected = true;
+                    AccountInfo accountInfo = JsonUtility.FromJson<AccountInfo>(request.downloadHandler.text);
+                    accountName = accountInfo.username;
+                    Repaint();
 
-                PlayerPrefs.SetString(SketchfabTokenKey, token);
-                PlayerPrefs.Save();
+                    ModelDownloader.Instance.SetToken(token);
+                }
+                else
+                {
+                    Debug.LogError("Failed to connect to Sketchfab: " + request.error);
+                }
             }
-            else
+            catch (Exception e)
             {
                 Debug.LogError("Failed to connect to Sketchfab: " + request.error);
             }
