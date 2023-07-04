@@ -1,0 +1,14 @@
+name: Publish to OpenUPM
+on:
+  push:
+    branches:
+      - main
+jobs:
+  publish:
+    name: "Publish to OpenUPM"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: openupm/openupm-cli@v1
+        with:
+          args: publish -u ${{ secrets.OPENUPM_USERNAME }} -p ${{ secrets.OPENUPM_PASSWORD }} -e ${{ secrets.OPENUPM_EMAIL }}
