@@ -7,10 +7,10 @@ on:
       - 'releases/**'
 jobs:
   publish:
-    name: Publish to OpenUPM 🚀
+    name: "Publish to OpenUPM" 🚀
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: openupm/openupm-cli@v1.52.0
+      - uses: openupm/openupm-cli@v1
         with:
           args: publish -u ${{ secrets.NPM_USERNAME }} -p ${{ secrets.NPM_PASSWORD }} -e ${{ secrets.NPM_EMAIL }}
