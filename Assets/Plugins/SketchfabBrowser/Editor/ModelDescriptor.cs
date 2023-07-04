@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using UnityEngine.Serialization;
 
-namespace Package.Runtime
+namespace SparkGames.SketchfabBrowser.Editor
 {
     [System.Serializable]
     public class PageModels
@@ -86,16 +85,16 @@ namespace Package.Runtime
         gltf,
         glb
     }
-}
 
-public class SearchThumb
-{
-    public readonly string uid;
-    public readonly Texture2D thumb;
-
-    public SearchThumb(string modelUid, Texture2D texture2D)
+    public class SearchThumb
     {
-        uid = modelUid;
-        thumb = texture2D;
+        public readonly string uid;
+        public readonly Texture2D thumb;
+
+        public SearchThumb(string modelUid, Texture2D texture2D)
+        {
+            uid = modelUid;
+            thumb = texture2D;
+        }
     }
 }
