@@ -1,14 +1,20 @@
 {
 	"name": "com.sparkgames.sketchfabbrowser",
-	"version": "0.0.1",
-	"displayName": "Sketchfab Browser [beta]",
-	"description": "Fetches model data from Sketchfab.",
+	"version": "1.0.0",
+	"displayName": "Sketchfab Browser",
+	"description": "Browse & Fetch models from Sketchfab.com",
 	"unity": "2021.3",
 	"keywords": ["Sketchfab","Unity","Model","Spark"],
-	"author": "Spark Games",
+	"author": {
+		"name": "Muammar Yacoob",
+		"email": "muammar.yacoob@gmail.com",
+		"url": "https://panettonegames.com"
+		},
 	"license": "MIT",
 
 	"dependencies" : {
+		"com.unity.modules.jsonserialize": "1.0.0",
+		"com.unity.modules.unitywebrequest": "1.0.0",
 		"com.cysharp.unitask": "2.x",
 		"com.atteneder.gltfast" : "5.0.4"
 	},
@@ -23,5 +29,10 @@
 			"com.atteneder"
 			]
 		}
-	]
+	],
+  "type": "library",
+  "unityRelease": "7f1",
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
+  }
 }
