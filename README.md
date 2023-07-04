@@ -1,5 +1,5 @@
-# Sketchfab Browser [beta]
-*A basic Unity editor to browse for models in sketchfab.*
+# Sketchfab Browser
+*Browse and download sketchfab models inside Unity.*
 
 ## Installation ##
 In Unity Package Manager (UPM) Add Package from git URL:<BR>
