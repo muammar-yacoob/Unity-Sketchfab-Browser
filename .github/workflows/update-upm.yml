@@ -1,4 +1,4 @@
-name: Publish to OpenUPM 🚀
+name: Publish 🚀
 on:
   workflow_dispatch:
   push:
@@ -7,7 +7,7 @@ on:
       - 'releases/**'
 jobs:
   publish:
-    name: "Publish to OpenUPM" 🚀
+    name: Publish to OpenUPM 🚀
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
