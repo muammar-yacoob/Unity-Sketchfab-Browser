@@ -4,20 +4,18 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using Package.Runtime;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;
 
-namespace SparkGames.Sketchfab.Package.Editor
+namespace SparkGames.SketchfabBrowser.Editor
 {
     //[CreateAssetMenu(fileName = "ModelDownloader", menuName = "Sketchfab Browser/ModelDownloader", order = 1)]
     public class ModelDownloader : ScriptableObject, IModelDownloader
     {
         [SerializeField] private string apiToken;
-        [SerializeField] private string absoluteDownloadPath;
-        private string relativeDownloadPath;
+        [SerializeField] private string relativeDownloadPath;
         
         private Model currentModel;
         private const string SketchfabTokenKey = "SketchfabTokenKey";
@@ -29,12 +27,10 @@ namespace SparkGames.Sketchfab.Package.Editor
 
         private void OnEnable()
         {
-            Debug.Log("OnEnable");
             instance = this;
   
             apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
-            absoluteDownloadPath = PlayerPrefs.GetString(SketchfabDownloadsPath, Application.dataPath + "/Sketchfab Models");
-            relativeDownloadPath = absoluteDownloadPath.Substring(absoluteDownloadPath.IndexOf("Assets"));
+            //GetDownloadPath();
         }
 
         public void SetToken(string apiToken)
@@ -44,9 +40,13 @@ namespace SparkGames.Sketchfab.Package.Editor
             PlayerPrefs.Save();
         }
 
-        public void SetDownloadPath(string downloadPath) => this.absoluteDownloadPath = downloadPath;
+        private string GetDownloadPath()
+        {
+            if (Directory.Exists(relativeDownloadPath)) return relativeDownloadPath;
+            return PlayerPrefs.GetString(SketchfabDownloadsPath, "Assets/Sketchfab Models");
+        }
 
-        public async UniTaskVoid DownloadModel(Model model, Action<float> onDownloadProgress = null)
+        public async UniTask DownloadModel(Model model, Action<float> onDownloadProgress = null)
         {
             model.IsDownloading = true;
             currentModel = await DescribeModel(model.uid);
@@ -108,8 +108,10 @@ namespace SparkGames.Sketchfab.Package.Editor
                 byte[] modelBytes = request.downloadHandler.data;
 
                 string fileName = currentModel.name + $".zip";
-                Directory.CreateDirectory(absoluteDownloadPath);
-                string savePath = Path.Combine(absoluteDownloadPath, fileName);
+                relativeDownloadPath ??= GetDownloadPath();
+                
+                Directory.CreateDirectory(relativeDownloadPath);
+                string savePath = Path.Combine(relativeDownloadPath, fileName);
                 File.WriteAllBytes(savePath, modelBytes);
                 await Unzip(savePath);
             }
@@ -137,7 +139,7 @@ namespace SparkGames.Sketchfab.Package.Editor
             }
 
             File.Delete(savePath);
-            Debug.Log($"Model is downloaded to: " + savePath.Replace(".zip", ""));
+            Debug.Log($"Model is downloaded to: " + savePath.Replace(".zip", "").Replace("\\", "/"));
             
             AssetDatabase.Refresh();
 

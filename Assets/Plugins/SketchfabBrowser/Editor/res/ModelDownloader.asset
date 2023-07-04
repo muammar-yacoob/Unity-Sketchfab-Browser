@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1713ad0618574f244a7619c3ecae7bab, type: 3}
   m_Name: ModelDownloader
   m_EditorClassIdentifier: 
-  apiToken: 
-  absoluteDownloadPath: 
+  apiToken: 712324ddd97445fdab3b4212b824d4ff
+  relativeDownloadPath: Assets/Sketchfab Models
