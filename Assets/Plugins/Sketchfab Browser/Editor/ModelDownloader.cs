@@ -12,7 +12,8 @@ using Object = UnityEngine.Object;
 
 namespace SparkGames.Sketchfab.Package.Editor
 {
-    public class ModelDownloader : IModelDownloader
+    //[CreateAssetMenu(fileName = "ModelDownloader", menuName = "Sketchfab Browser/ModelDownloader", order = 1)]
+    public class ModelDownloader : ScriptableObject, IModelDownloader
     {
         [SerializeField] private string apiToken;
         [SerializeField] private string absoluteDownloadPath;
@@ -20,19 +21,20 @@ namespace SparkGames.Sketchfab.Package.Editor
         
         private Model currentModel;
         private const string SketchfabTokenKey = "SketchfabTokenKey";
+        private const string SketchfabDownloadsPath = "SketchfabDownloadsPath";
 
         private static ModelDownloader instance;
-        public static ModelDownloader Instance;
+        public static ModelDownloader Instance => instance ??= Resources.Load<ModelDownloader>("ModelDownloader");
         public string ApiToken => apiToken;
 
-        ModelDownloader()
+        private void OnEnable()
         {
+            Debug.Log("OnEnable");
             instance = this;
   
             apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
-            absoluteDownloadPath ??= Application.dataPath + "/Sketchfab Models";
+            absoluteDownloadPath = PlayerPrefs.GetString(SketchfabDownloadsPath, Application.dataPath + "/Sketchfab Models");
             relativeDownloadPath = absoluteDownloadPath.Substring(absoluteDownloadPath.IndexOf("Assets"));
-
         }
 
         public void SetToken(string apiToken)

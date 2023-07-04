@@ -47,8 +47,8 @@ public class SketchfabBrowser : EditorWindow
     {
         windowIcon = (Texture2D)AssetDatabase.LoadAssetAtPath("Assets/Package/Editor/res/sketchfab-logo.png", typeof(Texture2D));
         titleContent.image = windowIcon;
-        panelDrawer = new GridPanel();
-        apiToken = ModelDownloader.Instance.ApiToken;
+        panelDrawer = new GridPanel(); 
+        apiToken = ModelDownloader.Instance?.ApiToken;
     }
 
     private void OnGUI()
