@@ -12,6 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: openupm/openupm-cli@master
+      - uses: openupm/openupm-cli@v1.*
         with:
           args: publish -u ${{ secrets.NPM_USERNAME }} -p ${{ secrets.NPM_PASSWORD }} -e ${{ secrets.NPM_EMAIL }}
