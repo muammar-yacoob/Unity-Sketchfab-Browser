@@ -15,7 +15,7 @@
 	"dependencies" : {
 		"com.unity.modules.jsonserialize": "1.0.0",
 		"com.unity.modules.unitywebrequest": "1.0.0",
-		"com.cysharp.unitask": "2.x",
+		"com.cysharp.unitask": "2.3.3",
 		"com.atteneder.gltfast" : "5.0.4"
 	},
 	
