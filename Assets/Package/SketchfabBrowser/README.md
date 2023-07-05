@@ -7,11 +7,6 @@ https://github.com/muammar-yacoob/unity-sketchfab-browser.git?path=Assets/Packag
 
 It should be added to Unity menus under: *<font color=#eeeeee>[Assets > Sketchfab browser]</font>*
 
-### Model Inspector
-[![Model Inspector](./res/tool-window.jpg)](https://sketchfab.com/3d-models/starbutts-564e02a97528499388ca00d3c6bdb044)
-
 ### Model Browser
-![Model Browser](./res/model-browser.jpg)
-
-![Model Browser with Details](./res/model-browser2.jpg)
+[![Model Inspector](./res/model-browser.png)](https://sketchfab.com/3d-models/starbutts-564e02a97528499388ca00d3c6bdb044)
 
