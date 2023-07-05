@@ -10,7 +10,7 @@ It should be added to Unity menus under: *<font color=#eeeeee>[Assets > Sketchfa
 
 [![Model Inspector](./res/Sketchfab%20Browser%20160x160.png)](https://sketchfab.com/3d-models/starbutts-564e02a97528499388ca00d3c6bdb044)
 
-You may also download the <a href="./SketchfabBrowser v1.0.0.unitypackage">Unity Package</a>
+You may also download the <a href="./releases/download/v1.0.0/SketchfabBrowser.v1.0.0.unitypackage">Unity Package</a>
 <hr><br>
 
 ### Model Browser/Downloader
