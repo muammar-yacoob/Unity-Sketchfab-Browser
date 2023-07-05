@@ -9,15 +9,16 @@ jobs:
     name: release
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Release
-      uses: cycjimmy/semantic-release-action@v2
+      uses: cycjimmy/semantic-release-action@v3
       with:
         extra_plugins: |
           @semantic-release/changelog
           @semantic-release/git
-        branch: master
+        branch: main
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
