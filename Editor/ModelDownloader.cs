@@ -23,9 +23,9 @@ namespace SparkGames.SketchfabBrowser.Editor
         public string ApiToken => apiToken;
 
         private static ModelDownloader instance;
-        public static ModelDownloader Instance => instance ?? new ModelDownloader();
+        public static ModelDownloader Instance => instance ??= new ModelDownloader();
 
-        ModelDownloader()
+        public void SetDownloadPath()
         {
             apiToken = PlayerPrefs.GetString(SketchfabTokenKey, "your-sketchfab-api-token"); //https://sketchfab.com/settings/password
             downloadsFullPath = PlayerPrefs.GetString(SketchfabDownloadsPath, Path.Combine(Application.dataPath,"Sketchfab Models"));

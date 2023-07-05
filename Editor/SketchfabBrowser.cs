@@ -223,6 +223,7 @@ namespace SparkGames.SketchfabBrowser.Editor
                         Repaint();
 
                         ModelDownloader.Instance.SetToken(token);
+                        ModelDownloader.Instance.SetDownloadPath();
                     }
                     else
                     {
