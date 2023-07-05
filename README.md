@@ -3,8 +3,9 @@
 
 ## Installation ##
 In Unity Package Manager (UPM) Add Package from git URL:<BR>
-https://github.com/muammar-yacoob/unity-sketchfab-browser.git<br>
-Check out <a href="../../releases">releases</a> or use the <a href="http://package-installer.glitch.me/v1/installer/OpenUPM/com.sparkgames.sketchfabbrowser?registry=https://package.openupm.com">Unity Package Installer</a>
+https://github.com/muammar-yacoob/unity-sketchfab-browser.git<br><br>
+[Releases](../../releases)<br>
+[Unity Package Installer](http://package-installer.glitch.me/v1/installer/OpenUPM/com.sparkgames.sketchfabbrowser?registry=https://package.openupm.com)
 
 It should be added to Unity menus under: *<font color=#eeeeee>[Assets > Sketchfab browser]</font>*
 
