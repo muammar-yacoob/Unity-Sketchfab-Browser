@@ -3,8 +3,8 @@
 	"version": "1.0.0",
 	"displayName": "Sketchfab Browser",
 	"description": "Browse & Fetch models from Sketchfab.com",
-	"unity": "2021.3",
-	"keywords": ["Sketchfab","Unity","Model","Spark"],
+	"unity": "2020.1",
+	"keywords": ["Sketchfab","Unity","Model","3D", "Browser"],
 	"author": {
 		"name": "Muammar Yacoob",
 		"email": "muammar.yacoob@gmail.com",
@@ -15,24 +15,7 @@
 	"dependencies" : {
 		"com.unity.modules.jsonserialize": "1.0.0",
 		"com.unity.modules.unitywebrequest": "1.0.0",
-		"com.cysharp.unitask": "2.3.3",
+		"com.cysharp.unitask": "2.3.1",
 		"com.atteneder.gltfast" : "5.0.4"
-	},
-	
-	"scopedRegistries" : [
-		{
-			"name" : "cysharp",
-			"url" : "https://package.openupm.com",
-			"scopes": [
-			"com.cysharp.unitask",
-			"com.openupm",
-			"com.atteneder"
-			]
-		}
-	],
-  "type": "library",
-  "unityRelease": "7f1",
-  "publishConfig": {
-    "registry": "https://package.openupm.com"
-  }
+	}
 }
