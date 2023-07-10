@@ -1,5 +1,5 @@
 {
-	"name": "@muammar-yacoob/com.sparkgames.sketchfabbrowser",
+	"name": "com.sparkgames.sketchfabbrowser",
 	"version": "1.0.1",
 	"displayName": "Sketchfab Browser",
 	"description": "Browse & Fetch models from Sketchfab.com",
