@@ -16,7 +16,7 @@ jobs:
         node-version: '12.x'
         registry-url: 'https://npm.pkg.github.com'
         scope: '@muammar-yacoob'
-    - run: cd Assets/Package && npm ci
-    - run: cd Assets/Package && npm publish
+    - run: npm ci
+    - run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
