@@ -15,7 +15,7 @@ The Unity Sketchfab Browser is a Unity Editor extension that allows developers t
 ## Installation ##
 In Unity Package Manager (UPM) Add Package from git URL:<BR>
 https://github.com/muammar-yacoob/unity-sketchfab-browser.git<br><br>
-Or get the [Unity Package Installer](../../releases/download/v1.0.1/Install-sketchfabbrowser-latest.unitypackage)<br>
+Or get the latest [Unity Package Installer](../../releases)<br>
 
 After installation, you will see the Sketchfab browser option under `[Assets > Sketchfab Browser]` in the Unity editor top menu bar.
 
