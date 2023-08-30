@@ -1,5 +1,5 @@
 {
-	"name": "@muammar-yacoob/com.sparkgames.sketchfabbrowser",
+	"name": "com.sparkgames.sketchfabbrowser",
 	"version": "1.0.1",
 	"displayName": "Sketchfab Browser",
 	"description": "Browse & Fetch models from Sketchfab.com",
@@ -12,12 +12,12 @@
 	},
 	"license": "MIT",
 	"repository": {
-		"url": "git://github.com/muammar-yacoob/Unity-Sketchfab-Browser.git"
+		"url": "https://github.com/muammar-yacoob/Unity-Sketchfab-Browser.git"
 	},
 	"dependencies": {
 		"com.unity.modules.jsonserialize": "1.0.0",
 		"com.unity.modules.unitywebrequest": "1.0.0",
 		"com.cysharp.unitask": "2.3.1",
-		"com.atteneder.gltfast" : "5.0.4"
+		"com.atteneder.gltfast": "5.0.4"
 	}
 }
