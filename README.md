@@ -29,3 +29,4 @@ After installation, you will see the Sketchfab browser option under `[Assets > S
 ## Support and Contribution
 Found this useful? A quick ⭐️ is much appreciated and could help you and others find the repo easier.
 For issues, feature requests, or contributions, please open an issue or pull request on GitHub.
+>Here's a [quick overview](https://youtu.be/GKQf8HgJRyM)
