@@ -1,16 +1,12 @@
 # Unity Sketchfab Browser
 
 ## Overview
-
-The Unity Sketchfab Browser is a Unity Editor extension that allows developers to search, preview, and import 3D models from Sketchfab directly into their Unity projects. Leveraging the power of UniTask for asynchronous operations and Unity.XR for optimal rendering, the browser aims to streamline the workflow of 3D asset management in Unity.
+The Unity Sketchfab Browser is a Unity Editor extension that allows developers to search, preview, and import 3D models from Sketchfab directly without leaving the Unity Editor.
 
 ## Features
-
-- **Search Functionality**: Quickly find models based on keywords, categories, and more.
+- **Search Functionality**: Quickly find models based on keywords.
 - **Preview**: View detailed previews of models before importing.
-- **Asynchronous Tasks**: Uses UniTask for non-blocking operations.
-- **UPM Support**: Easy installation through Unity's Package Manager.
-- **Testable Code**: Follows SOLID principles and MVC architecture for easy testing.
+- **Asynchronous Tasks**: Supports simultaneous downloads.
 
 ## Installation ##
 In Unity Package Manager (UPM) Add Package from git URL:<BR>
