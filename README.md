@@ -16,8 +16,7 @@ Or get the latest [Unity Package Installer](../../releases)<br>
 After installation, you will see the Sketchfab browser option under `[Assets > Sketchfab Browser]` in the Unity editor top menu bar.
 
 ### Model Browser
-[![Model Inspector](./res/model-browser.png)](https://sketchfab.com/3d-models/starbutts-564e02a97528499388ca00d3c6bdb044)
-
+[![Model Inspector](./res/model-browser.png)]
 
 ## Usage
 1. Open the Sketchfab Browser from `Assets > Sketchfab Browser`.
@@ -29,5 +28,4 @@ After installation, you will see the Sketchfab browser option under `[Assets > S
 ## Support and Contribution
 Found this useful? A quick ⭐️ is much appreciated and could help you and others find the repo easier.
 For issues, feature requests, or contributions, please open an issue or pull request on GitHub.
-> Here's a <a href="https://youtu.be/GKQf8HgJRyM" target="_blank">quick overview</a>
-
+Here's a <a href="https://youtu.be/GKQf8HgJRyM" target="_blank">quick overview</a>
